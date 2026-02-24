@@ -34,6 +34,8 @@ export interface Spec {
   filename: string;
   /** Full file path if imported */
   filepath?: string;
+  /** GitHub blob SHA (set when pulled from GitHub, used for updates) */
+  githubSha?: string;
   /** ISO timestamp */
   createdAt: string;
   /** ISO timestamp */

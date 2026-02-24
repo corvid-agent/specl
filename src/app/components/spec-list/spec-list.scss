@@ -109,3 +109,21 @@
     font-size: 12px;
   }
 }
+
+@media (max-width: 767px) {
+  .spec-item {
+    padding: 12px 12px;
+  }
+
+  .spec-filename {
+    font-size: 15px;
+  }
+
+  .spec-module {
+    font-size: 12px;
+  }
+
+  .delete-btn {
+    opacity: 0.5;
+  }
+}

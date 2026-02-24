@@ -1,0 +1,89 @@
+<div class="github-section">
+  @if (github.connected()) {
+    <div class="github-connected">
+      <div class="connection-info">
+        <span class="status-dot connected"></span>
+        <span class="connection-label">{{ github.config()?.owner }}/{{ github.config()?.repo }}</span>
+      </div>
+      <div class="connected-actions">
+        <button class="btn btn-sm btn-primary" (click)="onPull()" [disabled]="github.loading()">
+          @if (github.loading()) { Pulling... } @else { Pull Specs }
+        </button>
+        <button class="btn btn-sm" (click)="onDisconnect()">Disconnect</button>
+      </div>
+    </div>
+  } @else {
+    <button class="btn btn-sm github-toggle" (click)="toggleForm()">
+      @if (showForm()) { Cancel } @else { Connect GitHub }
+    </button>
+  }
+
+  @if (showForm() && !github.connected()) {
+    <div class="github-form">
+      <label class="form-field">
+        <span class="form-label">Token</span>
+        <input
+          type="password"
+          class="form-input"
+          placeholder="ghp_..."
+          [value]="token()"
+          (input)="updateField('token', $event)"
+        />
+      </label>
+      <div class="form-row">
+        <label class="form-field">
+          <span class="form-label">Owner</span>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="org or user"
+            [value]="owner()"
+            (input)="updateField('owner', $event)"
+          />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Repo</span>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="repo-name"
+            [value]="repo()"
+            (input)="updateField('repo', $event)"
+          />
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="form-field">
+          <span class="form-label">Branch</span>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="main"
+            [value]="branch()"
+            (input)="updateField('branch', $event)"
+          />
+        </label>
+        <label class="form-field">
+          <span class="form-label">Specs Path</span>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="specs"
+            [value]="specsPath()"
+            (input)="updateField('specsPath', $event)"
+          />
+        </label>
+      </div>
+      @if (github.error()) {
+        <div class="form-error">{{ github.error() }}</div>
+      }
+      <button
+        class="btn btn-primary btn-sm"
+        (click)="onConnect()"
+        [disabled]="github.loading() || !token() || !owner() || !repo()"
+      >
+        @if (github.loading()) { Connecting... } @else { Connect }
+      </button>
+    </div>
+  }
+</div>

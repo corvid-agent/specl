@@ -22,7 +22,7 @@ Defines the core data types and interfaces for the Specl application. All other 
 | `SpecStatus` | Union type `'draft' \| 'active'` representing publication state |
 | `SpecFrontmatter` | Interface for YAML frontmatter metadata (module, version, status, files, db_tables, depends_on) |
 | `SpecSection` | Interface for a parsed markdown section (heading, level, content) |
-| `Spec` | Interface for a complete spec document including frontmatter, body, sections, and metadata |
+| `Spec` | Interface for a complete spec document including frontmatter, body, sections, metadata, and optional `githubSha` for GitHub sync |
 | `SpecSuite` | Interface grouping a suite name with its specs |
 | `ValidationError` | Interface for a single validation issue (level, field, message) |
 | `ValidationResult` | Interface for the result of validation (valid flag + errors array) |
@@ -47,6 +47,7 @@ Defines the core data types and interfaces for the Specl application. All other 
 3. `DEFAULT_FRONTMATTER` has empty module, version 1, status draft, and empty arrays for files, db_tables, depends_on
 4. `createEmptySpec` always returns a Spec with valid ISO timestamps for createdAt and updatedAt
 5. `Spec.id` is optional — it is only populated after database persistence
+6. `Spec.githubSha` is optional — set when a spec is pulled from GitHub, used for update operations
 
 ## Behavioral Examples
 
@@ -90,9 +91,11 @@ Defines the core data types and interfaces for the Specl application. All other 
 | `frontmatter-editor` | `SpecFrontmatter`, `SpecStatus` |
 | `spec-preview` | `ValidationResult`, `ValidationError` |
 | `spec-template` | `SpecFrontmatter` |
+| `github-service` | `Spec` (for GitHub SHA tracking) |
 
 ## Change Log
 
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Add `githubSha` optional field to Spec, add github-service consumer |

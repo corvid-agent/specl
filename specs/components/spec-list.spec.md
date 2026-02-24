@@ -8,6 +8,7 @@ files:
   - src/app/components/spec-list/spec-list.scss
 depends_on:
   - spec-store-service
+  - github-connect
 ---
 
 # Spec List
@@ -36,6 +37,7 @@ This component has no inputs or outputs — it reads directly from `SpecStoreSer
 4. Delete uses `event.stopPropagation()` to prevent triggering select on the parent list item
 5. Import accepts `.md` and `.spec.md` files, supports multiple file selection
 6. Import reads file contents via `File.text()` and delegates to `store.importMarkdownFiles`
+7. GitHub connect component is rendered below the spec list for repo connection and pull
 
 ## Behavioral Examples
 
@@ -78,6 +80,7 @@ This component has no inputs or outputs — it reads directly from `SpecStoreSer
 | Module | What is used |
 |--------|-------------|
 | `spec-store-service` | `suites`, `createSpec`, `selectSpec`, `deleteSpec`, `importMarkdownFiles` |
+| `github-connect` | Child component for GitHub repo connection |
 | `@angular/router` | `Router` for navigation |
 | `@angular/common` | `KeyValuePipe` for iterating suite map |
 
@@ -92,3 +95,4 @@ This component has no inputs or outputs — it reads directly from `SpecStoreSer
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Add GitHub connect component integration and onGitHubPull handler |

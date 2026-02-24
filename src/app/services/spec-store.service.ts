@@ -78,12 +78,17 @@ export class SpecStoreService {
     }
   }
 
-  async importMarkdownFiles(files: { name: string; content: string; path?: string }[]): Promise<number> {
+  async importMarkdownFiles(
+    files: { name: string; content: string; path?: string; sha?: string }[],
+  ): Promise<number> {
     const imported: Spec[] = [];
     for (const file of files) {
       const suite = this.inferSuite(file.path ?? file.name);
       const spec = this.parser.parseMarkdown(file.content, file.name, suite);
       spec.filepath = file.path;
+      if (file.sha) {
+        spec.githubSha = file.sha;
+      }
       const id = await this.db.save(spec);
       spec.id = id;
       imported.push(spec);

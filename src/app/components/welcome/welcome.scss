@@ -66,3 +66,33 @@ h1 {
     font-size: 12px;
   }
 }
+
+@media (max-width: 767px) {
+  .welcome {
+    padding: 24px 16px;
+    align-items: flex-start;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  .tagline {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .actions {
+    flex-direction: column;
+    margin-bottom: 32px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .feature {
+    padding: 16px;
+  }
+}

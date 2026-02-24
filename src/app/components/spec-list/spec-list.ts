@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { SpecStoreService } from '../../services/spec-store.service';
+import { GitHubConnectComponent } from '../github-connect/github-connect';
 
 @Component({
   selector: 'app-spec-list',
   standalone: true,
-  imports: [KeyValuePipe],
+  imports: [KeyValuePipe, GitHubConnectComponent],
   templateUrl: './spec-list.html',
   styleUrl: './spec-list.scss',
 })
@@ -46,5 +47,16 @@ export class SpecListComponent {
       await this.store.importMarkdownFiles(files);
     };
     input.click();
+  }
+
+  async onGitHubPull(specs: { name: string; content: string; path: string; sha: string }[]): Promise<void> {
+    const count = await this.store.importMarkdownFiles(specs);
+    if (count > 0) {
+      const allSpecs = this.store.allSpecs();
+      const last = allSpecs[allSpecs.length - 1];
+      if (last?.id) {
+        await this.router.navigate(['/edit', last.id]);
+      }
+    }
   }
 }

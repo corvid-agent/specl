@@ -11,6 +11,7 @@ depends_on:
   - spec-store-service
   - spec-parser-service
   - spec-template
+  - github-service
   - frontmatter-editor
   - section-nav
   - section-editor
@@ -43,6 +44,8 @@ This component has no inputs or outputs — it is a routed page component that r
 | `validation` | `Signal<ValidationResult \| null>` | Latest validation result |
 | `filename` | `Signal<string>` | Current spec filename |
 | `activeSectionIndex` | `Signal<number>` | Active section index (-1 = frontmatter, 0+ = body sections) |
+| `prUrl` | `Signal<string \| null>` | URL of the most recently created PR |
+| `prLoading` | `Signal<boolean>` | Whether a PR creation is in progress |
 
 ### Computed Properties
 
@@ -55,6 +58,7 @@ This component has no inputs or outputs — it is a routed page component that r
 | `sections` | `Signal<SpecSection[]>` | All parsed sections |
 | `editableSections` | `Signal<SpecSection[]>` | Sections with level >= 2 (excludes title) |
 | `activeEditableSection` | `Signal<SpecSection \| null>` | The currently selected editable section |
+| `canCreatePR` | `Signal<boolean>` | True when GitHub is connected and the spec has a filepath |
 
 ## Invariants
 
@@ -64,6 +68,8 @@ This component has no inputs or outputs — it is a routed page component that r
 4. Any section content or heading change triggers `rebuildBody` which reconstructs the full body via `sectionsToBody`
 5. Switching to the preview tab automatically triggers validation
 6. Export generates a blob download with the serialized markdown
+7. "Create PR" button is only visible when GitHub is connected and the spec has a `filepath`
+8. PR creation pushes the serialized spec to a new branch and opens a PR against the configured base branch
 
 ## Behavioral Examples
 
@@ -97,6 +103,12 @@ This component has no inputs or outputs — it is a routed page component that r
 - **When** user clicks export
 - **Then** the spec is serialized to markdown, a Blob is created, and a file download is triggered with the spec's filename
 
+### Scenario: Create PR for a GitHub-sourced spec
+
+- **Given** a spec pulled from GitHub with `filepath: 'specs/services/auth.spec.md'` and GitHub connected
+- **When** user clicks "Create PR"
+- **Then** the spec is serialized, pushed to a new branch, a PR is created, and `prUrl` is set to the PR URL
+
 ## Error Cases
 
 | Condition | Behavior |
@@ -105,6 +117,8 @@ This component has no inputs or outputs — it is a routed page component that r
 | Section index out of bounds | `activeEditableSection` returns null |
 | Section not found in full array during edit | Change is silently dropped (indexOf returns -1) |
 | Export with no active spec | No-op, returns early |
+| PR creation fails (API error) | Error message set on GitHub service, `prUrl` stays null |
+| Create PR with no filepath | Button not shown (`canCreatePR` is false) |
 
 ## Dependencies
 
@@ -116,6 +130,7 @@ This component has no inputs or outputs — it is a routed page component that r
 | `spec-store-service` | `activeSpec`, `isDirty`, `selectSpec`, `updateActiveSpec`, `markDirty`, `validateActiveSpec`, `exportSpec` |
 | `spec-parser-service` | `parseSections`, `sectionsToBody` |
 | `spec-template` | `generateSpecTemplate` |
+| `github-service` | `connected`, `createSpecPR` for PR creation |
 | `frontmatter-editor` | Child component for frontmatter editing |
 | `section-nav` | Child component for section navigation |
 | `section-editor` | Child component for section content editing |
@@ -132,3 +147,4 @@ This component has no inputs or outputs — it is a routed page component that r
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Add GitHub PR creation (Create PR button, prUrl/prLoading signals, canCreatePR computed) |

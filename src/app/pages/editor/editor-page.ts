@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { SpecStoreService } from '../../services/spec-store.service';
 import { SpecParserService } from '../../services/spec-parser.service';
+import { GitHubService } from '../../services/github.service';
 import { FrontmatterEditorComponent } from '../../components/frontmatter-editor/frontmatter-editor';
 import { SectionNavComponent } from '../../components/section-nav/section-nav';
 import { SectionEditorComponent } from '../../components/section-editor/section-editor';
@@ -22,11 +23,22 @@ export class EditorPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(SpecStoreService);
   private readonly parser = inject(SpecParserService);
+  protected readonly github = inject(GitHubService);
 
   protected readonly activeTab = signal<EditorTab>('edit');
   protected readonly validation = signal<ValidationResult | null>(null);
   protected readonly filename = signal('');
   protected readonly activeSectionIndex = signal<number>(-1); // -1 = frontmatter
+  protected readonly prUrl = signal<string | null>(null);
+  protected readonly prLoading = signal(false);
+
+  /** Mobile: whether the section nav is visible (true = showing nav, false = showing editor) */
+  protected readonly mobileNavOpen = signal(true);
+
+  protected readonly canCreatePR = computed(() => {
+    const s = this.spec();
+    return this.github.connected() && s?.filepath != null;
+  });
 
   protected readonly spec = this.store.activeSpec;
   protected readonly isDirty = this.store.isDirty;
@@ -72,6 +84,7 @@ export class EditorPageComponent implements OnInit {
             await this.store.updateActiveSpec({ body: template, sections });
           }
           this.activeSectionIndex.set(-1);
+          this.mobileNavOpen.set(true);
         }
       }
     });
@@ -116,6 +129,14 @@ export class EditorPageComponent implements OnInit {
 
   protected onNavigate(index: number): void {
     this.activeSectionIndex.set(index);
+    // On mobile, selecting a section hides the nav and shows the editor
+    if (window.innerWidth < 768) {
+      this.mobileNavOpen.set(false);
+    }
+  }
+
+  protected onBackToNav(): void {
+    this.mobileNavOpen.set(true);
   }
 
   protected onFilenameChange(event: Event): void {
@@ -143,6 +164,44 @@ export class EditorPageComponent implements OnInit {
     a.download = spec.filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  protected async onCreatePR(): Promise<void> {
+    const s = this.spec();
+    if (!s?.id || !s.filepath) return;
+
+    const content = await this.store.exportSpec(s.id);
+    if (!content) return;
+
+    this.prLoading.set(true);
+    this.prUrl.set(null);
+
+    try {
+      const title = `docs: update ${s.filename}`;
+      const description = [
+        `Updates spec \`${s.frontmatter.module}\` (v${s.frontmatter.version}).`,
+        '',
+        `**File:** \`${s.filepath}\``,
+        `**Status:** ${s.frontmatter.status}`,
+        '',
+        'Created with [Specl](https://github.com/corvid-agent/specl)',
+      ].join('\n');
+
+      const pr = await this.github.createSpecPR(
+        s.filepath,
+        content,
+        s.githubSha,
+        title,
+        description,
+      );
+
+      this.prUrl.set(pr.html_url);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'PR creation failed';
+      this.github['_error'].set(msg);
+    } finally {
+      this.prLoading.set(false);
+    }
   }
 
   protected setTab(tab: EditorTab): void {
