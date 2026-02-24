@@ -32,16 +32,43 @@
     <div class="editor-body">
       @if (activeTab() === 'edit') {
         <aside class="editor-sidebar">
-          <app-frontmatter-editor
-            [frontmatter]="frontmatter()"
-            (frontmatterChange)="onFrontmatterChange($event)"
+          <app-section-nav
+            [sections]="editableSections()"
+            [activeIndex]="activeSectionIndex()"
+            (selectIndex)="onNavigate($event)"
           />
         </aside>
         <div class="editor-main">
-          <app-markdown-editor
-            [content]="body()"
-            (contentChange)="onBodyChange($event)"
-          />
+          @if (activeSectionIndex() === -1) {
+            <div class="section-panel">
+              <div class="section-panel-header">
+                <h2>Frontmatter</h2>
+                <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
+              </div>
+              <div class="section-panel-body">
+                <app-frontmatter-editor
+                  [frontmatter]="frontmatter()"
+                  (frontmatterChange)="onFrontmatterChange($event)"
+                />
+              </div>
+              <footer class="section-panel-footer">
+                @if (editableSections().length > 0) {
+                  <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
+                    Next: {{ editableSections()[0].heading }}
+                  </button>
+                }
+              </footer>
+            </div>
+          } @else if (activeEditableSection(); as sec) {
+            <app-section-editor
+              [section]="sec"
+              [sectionIndex]="activeSectionIndex()"
+              [totalSections]="editableSections().length"
+              (contentChange)="onSectionContentChange($event)"
+              (headingChange)="onSectionHeadingChange($event)"
+              (navigate)="onNavigate($event)"
+            />
+          }
         </div>
       } @else {
         <div class="preview-pane">

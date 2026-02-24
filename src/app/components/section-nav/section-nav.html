@@ -1,0 +1,22 @@
+<nav class="section-nav">
+  <h3 class="nav-title">Sections</h3>
+  <ul class="nav-list">
+    @for (item of navItems(); track item.label) {
+      <li>
+        <button
+          class="nav-item"
+          [class.active]="isActive(item)"
+          [class.level-2]="item.type === 'section' && item.level === 2"
+          [class.level-3]="item.type === 'section' && item.level >= 3"
+          [class.frontmatter]="item.type === 'frontmatter'"
+          (click)="onSelect(item.type === 'frontmatter' ? -1 : item.index)"
+        >
+          @if (item.type === 'frontmatter') {
+            <span class="nav-icon">&#9881;</span>
+          }
+          <span class="nav-label">{{ item.label }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+</nav>

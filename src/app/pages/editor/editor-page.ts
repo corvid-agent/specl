@@ -3,9 +3,10 @@ import { ActivatedRoute } from '@angular/router';
 import { SpecStoreService } from '../../services/spec-store.service';
 import { SpecParserService } from '../../services/spec-parser.service';
 import { FrontmatterEditorComponent } from '../../components/frontmatter-editor/frontmatter-editor';
-import { MarkdownEditorComponent } from '../../components/markdown-editor/markdown-editor';
+import { SectionNavComponent } from '../../components/section-nav/section-nav';
+import { SectionEditorComponent } from '../../components/section-editor/section-editor';
 import { SpecPreviewComponent } from '../../components/spec-preview/spec-preview';
-import { type SpecFrontmatter, type ValidationResult } from '../../models/spec.model';
+import { type SpecFrontmatter, type SpecSection, type ValidationResult } from '../../models/spec.model';
 import { generateSpecTemplate } from '../../models/spec-template';
 
 type EditorTab = 'edit' | 'preview';
@@ -13,7 +14,7 @@ type EditorTab = 'edit' | 'preview';
 @Component({
   selector: 'app-editor-page',
   standalone: true,
-  imports: [FrontmatterEditorComponent, MarkdownEditorComponent, SpecPreviewComponent],
+  imports: [FrontmatterEditorComponent, SectionNavComponent, SectionEditorComponent, SpecPreviewComponent],
   templateUrl: './editor-page.html',
   styleUrl: './editor-page.scss',
 })
@@ -25,6 +26,7 @@ export class EditorPageComponent implements OnInit {
   protected readonly activeTab = signal<EditorTab>('edit');
   protected readonly validation = signal<ValidationResult | null>(null);
   protected readonly filename = signal('');
+  protected readonly activeSectionIndex = signal<number>(-1); // -1 = frontmatter
 
   protected readonly spec = this.store.activeSpec;
   protected readonly isDirty = this.store.isDirty;
@@ -42,6 +44,20 @@ export class EditorPageComponent implements OnInit {
       },
   );
 
+  protected readonly sections = computed(() => this.spec()?.sections ?? []);
+
+  // Sections excluding the level-1 title (for nav and editing)
+  protected readonly editableSections = computed(() => {
+    return this.sections().filter((s) => s.level >= 2);
+  });
+
+  protected readonly activeEditableSection = computed(() => {
+    const idx = this.activeSectionIndex();
+    const secs = this.editableSections();
+    if (idx < 0 || idx >= secs.length) return null;
+    return secs[idx];
+  });
+
   ngOnInit(): void {
     this.route.params.subscribe(async (params) => {
       const id = Number(params['id']);
@@ -50,11 +66,12 @@ export class EditorPageComponent implements OnInit {
         const spec = this.store.activeSpec();
         if (spec) {
           this.filename.set(spec.filename);
-          // If body is empty, generate template
           if (!spec.body || spec.body.trim() === '') {
             const template = generateSpecTemplate(spec.frontmatter);
-            await this.store.updateActiveSpec({ body: template, sections: this.parser.parseMarkdown(template).sections });
+            const sections = this.parser.parseSections(template);
+            await this.store.updateActiveSpec({ body: template, sections });
           }
+          this.activeSectionIndex.set(-1);
         }
       }
     });
@@ -62,16 +79,43 @@ export class EditorPageComponent implements OnInit {
 
   protected onFrontmatterChange(fm: SpecFrontmatter): void {
     this.store.markDirty();
-    const spec = this.spec();
-    if (spec) {
-      this.store.updateActiveSpec({ frontmatter: fm });
-    }
+    this.store.updateActiveSpec({ frontmatter: fm });
   }
 
-  protected onBodyChange(body: string): void {
-    this.store.markDirty();
-    const sections = this.parser.parseMarkdown(body).sections;
-    this.store.updateActiveSpec({ body, sections });
+  protected onSectionContentChange(content: string): void {
+    const idx = this.activeSectionIndex();
+    const allSections = [...this.sections()];
+    const editables = this.editableSections();
+    if (idx < 0 || idx >= editables.length) return;
+
+    const target = editables[idx];
+    const fullIndex = allSections.findIndex(
+      (s) => s.heading === target.heading && s.level === target.level,
+    );
+    if (fullIndex === -1) return;
+
+    allSections[fullIndex] = { ...allSections[fullIndex], content };
+    this.rebuildBody(allSections);
+  }
+
+  protected onSectionHeadingChange(heading: string): void {
+    const idx = this.activeSectionIndex();
+    const allSections = [...this.sections()];
+    const editables = this.editableSections();
+    if (idx < 0 || idx >= editables.length) return;
+
+    const target = editables[idx];
+    const fullIndex = allSections.findIndex(
+      (s) => s.heading === target.heading && s.level === target.level,
+    );
+    if (fullIndex === -1) return;
+
+    allSections[fullIndex] = { ...allSections[fullIndex], heading };
+    this.rebuildBody(allSections);
+  }
+
+  protected onNavigate(index: number): void {
+    this.activeSectionIndex.set(index);
   }
 
   protected onFilenameChange(event: Event): void {
@@ -106,5 +150,14 @@ export class EditorPageComponent implements OnInit {
       this.onValidate();
     }
     this.activeTab.set(tab);
+  }
+
+  private rebuildBody(sections: SpecSection[]): void {
+    this.store.markDirty();
+    const titleSection = sections.find((s) => s.level === 1);
+    const titleText = titleSection?.heading ?? this.frontmatter().module ?? '';
+    const nonTitleSections = sections.filter((s) => s.level >= 2);
+    const body = this.parser.sectionsToBody(titleText, nonTitleSections);
+    this.store.updateActiveSpec({ body, sections });
   }
 }

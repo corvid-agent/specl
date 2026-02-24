@@ -1,0 +1,25 @@
+<div class="section-editor">
+  <header class="section-header">
+    <div class="section-heading-row">
+      <span class="heading-prefix">##</span>
+      <input
+        class="heading-input"
+        [ngModel]="headingValue()"
+        (ngModelChange)="onHeadingChange($event)"
+        placeholder="Section heading"
+      />
+    </div>
+    <div class="section-nav-buttons">
+      @if (hasPrev) {
+        <button class="btn btn-sm" (click)="goPrev()">Prev</button>
+      }
+      @if (hasNext) {
+        <button class="btn btn-sm" (click)="goNext()">Next</button>
+      }
+    </div>
+  </header>
+
+  <div class="section-body">
+    <div #sectionEditorHost class="editor-host"></div>
+  </div>
+</div>

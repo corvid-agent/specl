@@ -83,9 +83,28 @@ export class SpecParserService {
   }
 
   /**
+   * Rebuild the full markdown body from an array of sections.
+   * Includes the top-level title (# heading) if present.
+   */
+  sectionsToBody(title: string, sections: SpecSection[]): string {
+    const lines: string[] = [];
+    if (title) {
+      lines.push(`# ${title}`, '');
+    }
+    for (const section of sections) {
+      const hashes = '#'.repeat(section.level);
+      lines.push(`${hashes} ${section.heading}`, '');
+      if (section.content) {
+        lines.push(section.content, '');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  /**
    * Parse markdown body into sections by heading.
    */
-  private parseSections(body: string): SpecSection[] {
+  parseSections(body: string): SpecSection[] {
     const sections: SpecSection[] = [];
     const lines = body.split('\n');
     let current: SpecSection | null = null;

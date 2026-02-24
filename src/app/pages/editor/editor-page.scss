@@ -75,16 +75,18 @@
 }
 
 .editor-sidebar {
-  width: 320px;
-  min-width: 320px;
+  width: 240px;
+  min-width: 240px;
   overflow-y: auto;
   border-right: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-alt);
 }
 
 .editor-main {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .preview-pane {
@@ -99,4 +101,41 @@
   height: 100%;
   color: var(--text-muted);
   font-size: 14px;
+}
+
+// Section panel (frontmatter view)
+.section-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.section-panel-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  .section-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+}
+
+.section-panel-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.section-panel-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
 }

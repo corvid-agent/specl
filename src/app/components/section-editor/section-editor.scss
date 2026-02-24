@@ -1,0 +1,71 @@
+.section-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  gap: 12px;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.heading-prefix {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  flex-shrink: 0;
+}
+
+.heading-input {
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 0;
+
+  &:hover {
+    background: var(--hover);
+  }
+
+  &:focus {
+    outline: none;
+    background: var(--hover);
+  }
+}
+
+.section-nav-buttons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.section-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-host {
+  height: 100%;
+
+  :host ::ng-deep .cm-editor {
+    height: 100%;
+  }
+}
