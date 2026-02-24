@@ -337,26 +337,41 @@ export class GitHubService {
 
   /**
    * Check if a repo has spec files by looking for common spec directories.
+   * Uses the Git Trees API (recursive) to scan the repo tree in a single
+   * request, avoiding multiple 404s from the Contents API.
    * Returns the specs path if found, null otherwise.
    */
   async scanRepoForSpecs(owner: string, repo: string, branch: string): Promise<string | null> {
-    const candidates = ['specs', 'spec', 'docs/specs'];
+    try {
+      const res = await this.api(
+        `/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+      );
+      if (!res.ok) return null;
 
-    for (const candidate of candidates) {
-      try {
-        const res = await this.api(
-          `/repos/${owner}/${repo}/contents/${candidate}?ref=${branch}`,
-        );
-        if (!res.ok) continue;
+      const data: { tree: Array<{ path: string; type: string }>; truncated?: boolean } =
+        await res.json();
+      const candidates = ['specs', 'spec', 'docs/specs'];
 
-        const data: Array<{ name: string; type: string }> = await res.json();
-        const hasSpecFiles = data.some(
-          (item) => item.name.endsWith('.spec.md') || item.type === 'dir',
+      for (const candidate of candidates) {
+        // Check if the candidate directory exists
+        const dirExists = data.tree.some(
+          (item) => item.path === candidate && item.type === 'tree',
         );
-        if (hasSpecFiles) return candidate;
-      } catch {
-        continue;
+        if (!dirExists) continue;
+
+        // Check if it contains .spec.md files or subdirectories
+        const prefix = candidate + '/';
+        const hasSpecContent = data.tree.some(
+          (item) =>
+            item.path.startsWith(prefix) &&
+            // Only check direct children (no further slashes after prefix)
+            !item.path.slice(prefix.length).includes('/') &&
+            (item.path.endsWith('.spec.md') || item.type === 'tree'),
+        );
+        if (hasSpecContent) return candidate;
       }
+    } catch {
+      // Silently handle errors (empty repos, permission issues, etc.)
     }
     return null;
   }
