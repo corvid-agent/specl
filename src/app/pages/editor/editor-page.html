@@ -66,6 +66,7 @@
               <div class="section-panel-body">
                 <app-frontmatter-editor
                   [frontmatter]="frontmatter()"
+                  [knownModules]="knownModules()"
                   (frontmatterChange)="onFrontmatterChange($event)"
                 />
               </div>

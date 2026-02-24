@@ -58,6 +58,14 @@ export class EditorPageComponent implements OnInit {
 
   protected readonly sections = computed(() => this.spec()?.sections ?? []);
 
+  /** All known module names across specs, for dependency autocomplete */
+  protected readonly knownModules = computed(() => {
+    return this.store.allSpecs()
+      .map((s) => s.frontmatter.module)
+      .filter(Boolean)
+      .sort();
+  });
+
   // Sections excluding the level-1 title (for nav and editing)
   protected readonly editableSections = computed(() => {
     return this.sections().filter((s) => s.level >= 2);
