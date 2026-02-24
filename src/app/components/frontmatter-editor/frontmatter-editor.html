@@ -1,0 +1,101 @@
+<div class="frontmatter-editor">
+  <h3 class="section-title">Frontmatter</h3>
+
+  <div class="field">
+    <label for="fm-module">Module</label>
+    <input
+      id="fm-module"
+      type="text"
+      [ngModel]="frontmatter().module"
+      (ngModelChange)="onFieldChange('module', $event)"
+      placeholder="module-name"
+    />
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="fm-version">Version</label>
+      <input
+        id="fm-version"
+        type="number"
+        min="1"
+        [ngModel]="frontmatter().version"
+        (ngModelChange)="onFieldChange('version', $event)"
+      />
+    </div>
+    <div class="field">
+      <label for="fm-status">Status</label>
+      <select
+        id="fm-status"
+        [ngModel]="frontmatter().status"
+        (ngModelChange)="onStatusChange($event)"
+      >
+        <option value="draft">Draft</option>
+        <option value="active">Active</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Files</label>
+    <div class="list-items">
+      @for (file of frontmatter().files; track $index) {
+        <div class="list-item">
+          <code>{{ file }}</code>
+          <button class="btn-icon" (click)="removeFile($index)">&times;</button>
+        </div>
+      }
+    </div>
+    <div class="add-row">
+      <input
+        type="text"
+        [(ngModel)]="newFile"
+        placeholder="server/path/to/file.ts"
+        (keyup.enter)="addFile()"
+      />
+      <button class="btn btn-sm" (click)="addFile()">Add</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>DB Tables</label>
+    <div class="list-items">
+      @for (table of frontmatter().db_tables; track $index) {
+        <div class="list-item">
+          <code>{{ table }}</code>
+          <button class="btn-icon" (click)="removeTable($index)">&times;</button>
+        </div>
+      }
+    </div>
+    <div class="add-row">
+      <input
+        type="text"
+        [(ngModel)]="newTable"
+        placeholder="table_name"
+        (keyup.enter)="addTable()"
+      />
+      <button class="btn btn-sm" (click)="addTable()">Add</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Dependencies</label>
+    <div class="list-items">
+      @for (dep of frontmatter().depends_on; track $index) {
+        <div class="list-item">
+          <code>{{ dep }}</code>
+          <button class="btn-icon" (click)="removeDependency($index)">&times;</button>
+        </div>
+      }
+    </div>
+    <div class="add-row">
+      <input
+        type="text"
+        [(ngModel)]="newDep"
+        placeholder="specs/category/dep.spec.md"
+        (keyup.enter)="addDependency()"
+      />
+      <button class="btn btn-sm" (click)="addDependency()">Add</button>
+    </div>
+  </div>
+</div>

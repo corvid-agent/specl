@@ -1,0 +1,37 @@
+<div class="spec-list">
+  <div class="actions">
+    <button class="btn btn-primary" (click)="onCreateSpec()">+ New Spec</button>
+    <button class="btn btn-secondary" (click)="onImport()">Import</button>
+  </div>
+
+  @for (entry of store.suites() | keyvalue; track entry.key) {
+    <div class="suite-group">
+      <div class="suite-name">{{ entry.key }}</div>
+      @for (spec of entry.value; track spec.id) {
+        <div
+          class="spec-item"
+          [class.active]="store.activeSpec()?.id === spec.id"
+          (click)="onSelectSpec(spec.id!)"
+        >
+          <div class="spec-info">
+            <span class="spec-filename">{{ spec.filename }}</span>
+            <span class="spec-module">{{ spec.frontmatter.module || 'untitled' }}</span>
+          </div>
+          <span class="spec-status" [attr.data-status]="spec.frontmatter.status">
+            {{ spec.frontmatter.status }}
+          </span>
+          <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" title="Delete spec">
+            &times;
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (store.allSpecs().length === 0) {
+    <div class="empty-state">
+      <p>No specs yet.</p>
+      <p>Create a new spec or import existing <code>.spec.md</code> files.</p>
+    </div>
+  }
+</div>

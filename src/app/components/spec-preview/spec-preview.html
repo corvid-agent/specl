@@ -1,0 +1,27 @@
+<div class="spec-preview">
+  @if (validation(); as v) {
+    <div class="validation-panel" [class.valid]="v.valid" [class.invalid]="!v.valid">
+      <div class="validation-header">
+        @if (v.valid) {
+          <span class="status-badge valid">Valid</span>
+        } @else {
+          <span class="status-badge invalid">{{ errors.length }} error(s)</span>
+        }
+        @if (warnings.length > 0) {
+          <span class="status-badge warning">{{ warnings.length }} warning(s)</span>
+        }
+      </div>
+      @if (!v.valid || warnings.length > 0) {
+        <ul class="validation-list">
+          @for (err of v.errors; track $index) {
+            <li [class.error]="err.level === 'error'" [class.warning]="err.level === 'warning'">
+              <span class="field">{{ err.field }}:</span> {{ err.message }}
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <div class="preview-content" [innerHTML]="html()"></div>
+</div>

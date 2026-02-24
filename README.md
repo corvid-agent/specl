@@ -1,59 +1,54 @@
 # Specl
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.5.
+The all-in-one spec editor. Create, import, and manage markdown specifications with a structured UI.
 
-## Development server
+## Features
 
-To start a local development server, run:
+- **Structured Editing** — Edit frontmatter, sections, and tables through an intuitive UI
+- **Live Validation** — Real-time validation against the spec format
+- **Import & Export** — Import existing `.spec.md` files, export valid markdown
+- **Spec Suites** — Organize specs by folder/domain
+- **Dual Mode** — Works standalone (GitHub Pages, IndexedDB) or with an optional backend
+- **Dark/Light Theme** — Follows system preference
 
-```bash
-ng serve
-```
+## Tech Stack
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Angular 21 (standalone components, signals)
+- CodeMirror 6 (markdown editing)
+- Dexie.js (IndexedDB persistence)
+- Bun (package manager & build)
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Development
 
 ```bash
-ng generate --help
+bun install
+bun start
 ```
 
-## Building
-
-To build the project run:
+## Build
 
 ```bash
-ng build
+bun run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Spec Format
 
-## Running unit tests
+Specl understands the `.spec.md` format with YAML frontmatter:
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```yaml
+---
+module: module-name
+version: 1
+status: draft | active
+files:
+  - path/to/file.ts
+db_tables: []
+depends_on: []
+---
 ```
 
-## Running end-to-end tests
+Required sections: Purpose, Public API, Invariants, Behavioral Examples, Error Cases, Dependencies, Change Log.
 
-For end-to-end (e2e) testing, run:
+## License
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+MIT

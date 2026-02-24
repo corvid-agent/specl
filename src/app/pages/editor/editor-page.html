@@ -1,0 +1,60 @@
+@if (spec(); as s) {
+  <div class="editor-page">
+    <header class="editor-toolbar">
+      <input
+        class="filename-input"
+        [value]="filename()"
+        (change)="onFilenameChange($event)"
+        placeholder="filename.spec.md"
+      />
+      <div class="toolbar-actions">
+        <div class="tab-group">
+          <button
+            class="tab"
+            [class.active]="activeTab() === 'edit'"
+            (click)="setTab('edit')"
+          >
+            Edit
+          </button>
+          <button
+            class="tab"
+            [class.active]="activeTab() === 'preview'"
+            (click)="setTab('preview')"
+          >
+            Preview
+          </button>
+        </div>
+        <button class="btn btn-sm" (click)="onValidate()">Validate</button>
+        <button class="btn btn-sm" (click)="onExport()">Export</button>
+      </div>
+    </header>
+
+    <div class="editor-body">
+      @if (activeTab() === 'edit') {
+        <aside class="editor-sidebar">
+          <app-frontmatter-editor
+            [frontmatter]="frontmatter()"
+            (frontmatterChange)="onFrontmatterChange($event)"
+          />
+        </aside>
+        <div class="editor-main">
+          <app-markdown-editor
+            [content]="body()"
+            (contentChange)="onBodyChange($event)"
+          />
+        </div>
+      } @else {
+        <div class="preview-pane">
+          <app-spec-preview
+            [markdown]="body()"
+            [validation]="validation()"
+          />
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="no-spec">
+    <p>Select a spec from the sidebar or create a new one.</p>
+  </div>
+}

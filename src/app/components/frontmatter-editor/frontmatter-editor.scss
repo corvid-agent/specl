@@ -1,0 +1,92 @@
+.frontmatter-editor {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+}
+
+.field {
+  margin-bottom: 12px;
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-ring);
+    }
+  }
+
+  input[type='number'] {
+    width: 80px;
+  }
+
+  select {
+    cursor: pointer;
+  }
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+
+  .field {
+    flex: 1;
+  }
+}
+
+.list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--hover);
+  border-radius: 4px;
+  font-size: 12px;
+
+  code {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+}
+
+.add-row {
+  display: flex;
+  gap: 6px;
+
+  input {
+    flex: 1;
+  }
+}
