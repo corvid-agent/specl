@@ -76,9 +76,12 @@ describe('GitHubService', () => {
     it('should return specs path when spec files found', async () => {
       fetchSpy.mockResolvedValueOnce({
         ok: true,
-        json: async () => [
-          { name: 'auth.spec.md', type: 'file' },
-        ],
+        json: async () => ({
+          tree: [
+            { path: 'specs', type: 'tree' },
+            { path: 'specs/auth.spec.md', type: 'blob' },
+          ],
+        }),
       });
 
       const path = await service.scanRepoForSpecs('org', 'repo', 'main');
@@ -86,12 +89,15 @@ describe('GitHubService', () => {
     });
 
     it('should check multiple candidate directories', async () => {
-      // First candidate (specs) fails
-      fetchSpy.mockResolvedValueOnce({ ok: false });
-      // Second candidate (spec) has files
+      // Tree has 'spec' directory but not 'specs'
       fetchSpy.mockResolvedValueOnce({
         ok: true,
-        json: async () => [{ name: 'foo.spec.md', type: 'file' }],
+        json: async () => ({
+          tree: [
+            { path: 'spec', type: 'tree' },
+            { path: 'spec/foo.spec.md', type: 'blob' },
+          ],
+        }),
       });
 
       const path = await service.scanRepoForSpecs('org', 'repo', 'main');
@@ -99,7 +105,10 @@ describe('GitHubService', () => {
     });
 
     it('should return null when no spec dirs found', async () => {
-      fetchSpy.mockResolvedValue({ ok: false });
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ tree: [] }),
+      });
 
       const path = await service.scanRepoForSpecs('org', 'repo', 'main');
       expect(path).toBeNull();
