@@ -23,6 +23,22 @@ export interface GitHubPullRequest {
   state: string;
 }
 
+export interface GitHubRepo {
+  full_name: string;
+  name: string;
+  owner: { login: string };
+  default_branch: string;
+  private: boolean;
+  description: string | null;
+  updated_at: string;
+  html_url: string;
+}
+
+export interface RepoWithSpecs extends GitHubRepo {
+  hasSpecs: boolean;
+  specsPath: string | null;
+}
+
 const STORAGE_KEY = 'specl:github-config';
 
 @Injectable({ providedIn: 'root' })
@@ -295,6 +311,219 @@ export class GitHubService {
     );
   }
 
+  /**
+   * List repositories accessible to the authenticated user.
+   * Fetches up to 100 repos sorted by most recently updated.
+   */
+  async listUserRepos(): Promise<GitHubRepo[]> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    try {
+      const res = await this.api('/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? `HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to list repos';
+      this._error.set(msg);
+      return [];
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
+   * Check if a repo has spec files by looking for common spec directories.
+   * Returns the specs path if found, null otherwise.
+   */
+  async scanRepoForSpecs(owner: string, repo: string, branch: string): Promise<string | null> {
+    const candidates = ['specs', 'spec', 'docs/specs'];
+
+    for (const candidate of candidates) {
+      try {
+        const res = await this.api(
+          `/repos/${owner}/${repo}/contents/${candidate}?ref=${branch}`,
+        );
+        if (!res.ok) continue;
+
+        const data: Array<{ name: string; type: string }> = await res.json();
+        const hasSpecFiles = data.some(
+          (item) => item.name.endsWith('.spec.md') || item.type === 'dir',
+        );
+        if (hasSpecFiles) return candidate;
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * List repos and check each for spec files.
+   * Scans in parallel (batched) for speed.
+   */
+  async listReposWithSpecs(): Promise<RepoWithSpecs[]> {
+    const repos = await this.listUserRepos();
+    if (repos.length === 0) return [];
+
+    this._loading.set(true);
+
+    try {
+      // Scan repos in parallel batches of 5 to avoid rate limiting
+      const results: RepoWithSpecs[] = [];
+      const batchSize = 5;
+
+      for (let i = 0; i < repos.length; i += batchSize) {
+        const batch = repos.slice(i, i + batchSize);
+        const scanned = await Promise.all(
+          batch.map(async (repo) => {
+            const specsPath = await this.scanRepoForSpecs(
+              repo.owner.login,
+              repo.name,
+              repo.default_branch,
+            );
+            return {
+              ...repo,
+              hasSpecs: specsPath !== null,
+              specsPath,
+            } as RepoWithSpecs;
+          }),
+        );
+        results.push(...scanned);
+      }
+
+      // Sort: repos with specs first, then by updated_at
+      results.sort((a, b) => {
+        if (a.hasSpecs && !b.hasSpecs) return -1;
+        if (!a.hasSpecs && b.hasSpecs) return 1;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+
+      return results;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
+   * Quick-connect to a repo using its metadata. Fills in defaults automatically.
+   */
+  async quickConnect(repo: RepoWithSpecs): Promise<boolean> {
+    const repoConfig = {
+      owner: repo.owner.login,
+      repo: repo.name,
+      branch: repo.default_branch,
+      specsPath: repo.specsPath ?? 'specs',
+    };
+
+    if (this.oauth.accessToken()) {
+      return this.connectWithOAuth(repoConfig);
+    }
+    return false;
+  }
+
+  /**
+   * Initialize a specs directory in a repo that doesn't have one yet.
+   * Creates a branch, pushes README + template, opens a PR, then connects.
+   * Works without requireConfig() since the repo isn't connected yet.
+   */
+  async initializeSpecs(repo: GitHubRepo): Promise<GitHubPullRequest> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    const owner = repo.owner.login;
+    const repoName = repo.name;
+    const baseBranch = repo.default_branch;
+
+    try {
+      // Get base branch SHA
+      const refRes = await this.api(
+        `/repos/${owner}/${repoName}/git/ref/heads/${baseBranch}`,
+      );
+      if (!refRes.ok) throw new Error(`Failed to get base branch: HTTP ${refRes.status}`);
+      const refData = await refRes.json();
+      const baseSha = refData.object.sha;
+
+      // Create branch
+      const branchName = `specl/init-specs-${Date.now()}`;
+      const createRes = await this.api(`/repos/${owner}/${repoName}/git/refs`, {
+        method: 'POST',
+        body: JSON.stringify({ ref: `refs/heads/${branchName}`, sha: baseSha }),
+      });
+      if (!createRes.ok) {
+        const body = await createRes.json().catch(() => ({}));
+        throw new Error(body.message ?? `Failed to create branch: HTTP ${createRes.status}`);
+      }
+
+      // Push README.md
+      const readmeContent = SPECS_README_CONTENT;
+      const readmeEncoded = btoa(unescape(encodeURIComponent(readmeContent)));
+      const readmeRes = await this.api(`/repos/${owner}/${repoName}/contents/specs/README.md`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: 'docs: add specs directory with README',
+          content: readmeEncoded,
+          branch: branchName,
+        }),
+      });
+      if (!readmeRes.ok) {
+        const body = await readmeRes.json().catch(() => ({}));
+        throw new Error(body.message ?? `Failed to push README: HTTP ${readmeRes.status}`);
+      }
+
+      // Push _template.spec.md
+      const templateContent = SPECS_TEMPLATE_CONTENT;
+      const templateEncoded = btoa(unescape(encodeURIComponent(templateContent)));
+      const templateRes = await this.api(`/repos/${owner}/${repoName}/contents/specs/_template.spec.md`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: 'docs: add spec template',
+          content: templateEncoded,
+          branch: branchName,
+        }),
+      });
+      if (!templateRes.ok) {
+        const body = await templateRes.json().catch(() => ({}));
+        throw new Error(body.message ?? `Failed to push template: HTTP ${templateRes.status}`);
+      }
+
+      // Create PR
+      const prRes = await this.api(`/repos/${owner}/${repoName}/pulls`, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: 'Initialize specs directory',
+          body: [
+            '## Summary',
+            '',
+            'Adds a `specs/` directory with:',
+            '- **README.md** — Explains the spec format, how to create specs, and how agents use them',
+            '- **_template.spec.md** — Copy-paste template for creating new module specs',
+            '',
+            'Created by [specl](https://github.com/corvid-agent/specl).',
+          ].join('\n'),
+          head: branchName,
+          base: baseBranch,
+        }),
+      });
+
+      if (!prRes.ok) {
+        const body = await prRes.json().catch(() => ({}));
+        throw new Error(body.message ?? `Failed to create PR: HTTP ${prRes.status}`);
+      }
+
+      return await prRes.json();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to initialize specs';
+      this._error.set(msg);
+      throw err;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
   // ─── Private helpers ─────────────────────────────────────────────
 
   private requireConfig(): GitHubConfig {
@@ -368,3 +597,135 @@ export class GitHubService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }
 }
+
+// ─── Scaffold content for initializeSpecs ────────────────────────
+
+const SPECS_README_CONTENT = `# Module Specifications
+
+Structured markdown specs are the **source of truth** for what each module does. They exist so that:
+
+1. **The owner** can define and review module behavior without reading source code
+2. **Agents** can validate their changes against a formal contract
+3. **Correctness** can be checked automatically
+
+## Spec Format
+
+Each \`.spec.md\` file has two parts:
+
+### YAML Frontmatter
+
+\`\`\`yaml
+---
+module: module-name
+version: 1
+status: draft | active
+files:
+  - src/path/to/file.ts
+db_tables:
+  - table_name
+depends_on:
+  - specs/other/module.spec.md
+---
+\`\`\`
+
+### Required Sections
+
+| Section | What it contains |
+|---------|-----------------|
+| **Purpose** | Plain English: what this module does and why it exists |
+| **Public API** | Tables of exported functions, classes, types with signatures |
+| **Invariants** | Rules that must ALWAYS hold |
+| **Behavioral Examples** | Given/When/Then scenarios |
+| **Error Cases** | Table of error conditions and expected behavior |
+| **Dependencies** | What this module consumes and what consumes it |
+| **Change Log** | Date/author/change history |
+
+## Creating a New Spec
+
+1. Copy \`_template.spec.md\` to the appropriate subdirectory
+2. Fill in the YAML frontmatter with the correct files and tables
+3. Write each required section
+4. Set status to \`active\` once validated
+
+## How Agents Use Specs
+
+Before modifying any file listed in a spec's \`files:\` frontmatter:
+1. Read the corresponding spec
+2. Understand its invariants
+3. After modifying, verify the spec still holds
+4. If your change violates a spec invariant, update the spec first (add a Change Log entry)
+
+**Specs take precedence over code comments.** If code contradicts the spec, the code is the bug.
+`;
+
+const SPECS_TEMPLATE_CONTENT = `---
+module: module-name
+version: 1
+status: draft
+files:
+  - src/path/to/file.ts
+db_tables: []
+depends_on: []
+---
+
+# Module Name
+
+## Purpose
+
+<!-- Plain English: what this module does and why it exists -->
+
+## Public API
+
+### Exported Functions
+
+| Function | Parameters | Returns | Description |
+|----------|-----------|---------|-------------|
+| \`example\` | \`(id: string)\` | \`void\` | Description |
+
+### Exported Types
+
+| Type | Description |
+|------|-------------|
+| \`ExampleType\` | Description |
+
+### Exported Classes
+
+| Class | Description |
+|-------|-------------|
+
+## Invariants
+
+1. First invariant that must always hold
+
+## Behavioral Examples
+
+### Scenario: Basic usage
+
+- **Given** some precondition
+- **When** an action occurs
+- **Then** this result is expected
+
+## Error Cases
+
+| Condition | Behavior |
+|-----------|----------|
+| Error condition | What happens |
+
+## Dependencies
+
+### Consumes
+
+| Module | What is used |
+|--------|-------------|
+
+### Consumed By
+
+| Module | What is used |
+|--------|-------------|
+
+## Change Log
+
+| Date | Author | Change |
+|------|--------|--------|
+| YYYY-MM-DD | — | Initial spec |
+`;

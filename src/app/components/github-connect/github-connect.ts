@@ -1,6 +1,7 @@
 import { Component, inject, signal, output } from '@angular/core';
 import { GitHubService, type GitHubConfig } from '../../services/github.service';
 import { GitHubOAuthService } from '../../services/github-oauth.service';
+import { RepoBrowserComponent } from '../repo-browser/repo-browser';
 import { environment } from '../../../environments/environment';
 
 type ConnectMode = 'oauth' | 'pat';
@@ -8,6 +9,7 @@ type ConnectMode = 'oauth' | 'pat';
 @Component({
   selector: 'app-github-connect',
   standalone: true,
+  imports: [RepoBrowserComponent],
   templateUrl: './github-connect.html',
   styleUrl: './github-connect.scss',
 })
@@ -16,6 +18,7 @@ export class GitHubConnectComponent {
   readonly oauth = inject(GitHubOAuthService);
 
   readonly showForm = signal(false);
+  readonly showManualForm = signal(false);
   readonly connectMode = signal<ConnectMode>('oauth');
   readonly token = signal('');
   readonly owner = signal('');
@@ -77,9 +80,18 @@ export class GitHubConnectComponent {
     }
   }
 
+  onManualConnect(): void {
+    this.showManualForm.set(true);
+  }
+
+  onRepoBrowserConnected(): void {
+    this.showManualForm.set(false);
+  }
+
   onDisconnect(): void {
     this.github.disconnect();
     this.showForm.set(false);
+    this.showManualForm.set(false);
   }
 
   async onPull(): Promise<void> {
