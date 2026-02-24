@@ -1,6 +1,9 @@
 .github-section {
   padding: 12px 16px;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .github-toggle {
@@ -18,6 +21,13 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
+}
+
+.avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .status-dot {
@@ -42,8 +52,71 @@
 .connected-actions {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
+// GitHub sign-in button
+.btn-github {
+  width: 100%;
+  background: #24292e;
+  border-color: #24292e;
+  color: #fff;
+  gap: 8px;
+
+  &:hover {
+    background: #2f363d;
+    border-color: #2f363d;
+  }
+}
+
+.github-icon {
+  flex-shrink: 0;
+}
+
+// Device flow UI
+.device-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.device-flow-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.device-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-code {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 0.15em;
+  padding: 8px 14px;
+  background: var(--surface-alt, var(--hover));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  user-select: all;
+}
+
+.device-flow-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// OAuth signed in but no repo connected
+.oauth-signed-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+// Form
 .github-form {
   display: flex;
   flex-direction: column;

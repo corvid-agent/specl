@@ -7,13 +7,14 @@ files:
 depends_on:
   - spec-models
   - spec-store-service
+  - github-oauth
 ---
 
 # GitHub Service
 
 ## Purpose
 
-Provides GitHub API integration for the Specl application, enabling users to connect to a GitHub repository, pull `.spec.md` files, push changes to new branches, and create pull requests. All API calls use the GitHub REST API v3 with a personal access token (PAT) stored in localStorage. This is the bridge between the local IndexedDB spec store and remote GitHub repositories.
+Provides GitHub API integration for the Specl application, enabling users to connect to a GitHub repository, pull `.spec.md` files, push changes to new branches, and create pull requests. All API calls use the GitHub REST API v3 with either a personal access token (PAT) or an OAuth access token from `GitHubOAuthService`. This is the bridge between the local IndexedDB spec store and remote GitHub repositories.
 
 ## Public API
 
@@ -46,6 +47,7 @@ Provides GitHub API integration for the Specl application, enabling users to con
 | Method | Parameters | Returns | Description |
 |--------|-----------|---------|-------------|
 | `connect` | `(config: GitHubConfig)` | `Promise<boolean>` | Tests connection by fetching repo metadata, saves config to localStorage on success |
+| `connectWithOAuth` | `(repoConfig: Omit<GitHubConfig, 'token'>)` | `Promise<boolean>` | Connects using the OAuth token from `GitHubOAuthService` instead of a PAT |
 | `disconnect` | `()` | `void` | Clears config, connection state, and localStorage |
 | `listSpecFiles` | `()` | `Promise<GitHubRepoFile[]>` | Lists `.spec.md` files and directories in the configured specs path |
 | `listAllSpecFiles` | `()` | `Promise<GitHubRepoFile[]>` | Recursively lists all `.spec.md` files under the specs path |
@@ -61,7 +63,7 @@ Provides GitHub API integration for the Specl application, enabling users to con
 1. Config is persisted to `localStorage` under key `specl:github-config` on successful connect
 2. `connect()` tests the connection by fetching `/repos/{owner}/{repo}` before saving config
 3. `disconnect()` always clears both in-memory state and localStorage
-4. All API requests include `Authorization: Bearer {token}` and `X-GitHub-Api-Version: 2022-11-28` headers
+4. All API requests include `Authorization: Bearer {token}` and `X-GitHub-Api-Version: 2022-11-28` headers; if config has no PAT, the OAuth token from `GitHubOAuthService` is used as fallback
 5. `pullSpecs()` recursively walks the specs directory, only returning files ending in `.spec.md`
 6. `pushSpecsAsPR()` creates a unique branch named `specl/update-{timestamp}` for each PR
 7. File content is Base64-decoded on read and Base64-encoded (with UTF-8 handling) on write
@@ -70,11 +72,17 @@ Provides GitHub API integration for the Specl application, enabling users to con
 
 ## Behavioral Examples
 
-### Scenario: Connect to a GitHub repository
+### Scenario: Connect to a GitHub repository with PAT
 
 - **Given** a valid PAT, owner `CorvidLabs`, repo `corvid-agent`, branch `main`, specsPath `specs`
 - **When** `connect(config)` is called
 - **Then** the service fetches `/repos/CorvidLabs/corvid-agent`, sets `connected` to true, saves config to localStorage
+
+### Scenario: Connect to a GitHub repository with OAuth
+
+- **Given** the user is authenticated via `GitHubOAuthService`
+- **When** `connectWithOAuth({ owner: 'CorvidLabs', repo: 'corvid-agent', branch: 'main', specsPath: 'specs' })` is called
+- **Then** the service uses the OAuth token for the API call, sets `connected` to true on success
 
 ### Scenario: Pull specs from a repository
 
@@ -113,12 +121,13 @@ Provides GitHub API integration for the Specl application, enabling users to con
 |--------|-------------|
 | GitHub REST API (external) | Contents, Git Refs, Pulls endpoints |
 | `localStorage` (browser) | Config persistence |
+| `github-oauth` | `accessToken` signal used as auth fallback when PAT not set |
 
 ### Consumed By
 
 | Module | What is used |
 |--------|-------------|
-| `github-connect` | `connect`, `disconnect`, `pullSpecs`, signals |
+| `github-connect` | `connect`, `connectWithOAuth`, `disconnect`, `pullSpecs`, signals |
 | `editor-page` | `connected`, `createSpecPR` for PR creation |
 
 ## Change Log
@@ -126,3 +135,4 @@ Provides GitHub API integration for the Specl application, enabling users to con
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec — GitHub integration for pull/push/PR workflows |
+| 2026-02-24 | CorvidAgent | Add OAuth token fallback via `GitHubOAuthService`, add `connectWithOAuth` method |
