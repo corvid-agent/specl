@@ -57,6 +57,18 @@ Provides GitHub API integration for the Specl application, enabling users to con
 | `pushFile` | `(path, content, message, branch, existingSha?)` | `Promise<string>` | Creates or updates a file on a branch, returns new SHA |
 | `pushSpecsAsPR` | `(specs[], title, body)` | `Promise<GitHubPullRequest>` | Creates a branch, pushes all spec files, and opens a PR |
 | `createSpecPR` | `(specPath, content, existingSha, title, description)` | `Promise<GitHubPullRequest>` | Convenience: pushes a single spec and creates a PR |
+| `listUserRepos` | `()` | `Promise<GitHubRepo[]>` | Fetches up to 100 repos sorted by most recently updated (owner, collaborator, org member) |
+| `scanRepoForSpecs` | `(owner, repo, branch)` | `Promise<string \| null>` | Checks common spec directories (`specs`, `spec`, `docs/specs`); returns the path if found |
+| `listReposWithSpecs` | `()` | `Promise<RepoWithSpecs[]>` | Lists repos and batch-scans each for specs (batches of 5), returns sorted results (specs first) |
+| `quickConnect` | `(repo: RepoWithSpecs)` | `Promise<boolean>` | Auto-fills config from repo metadata and connects via OAuth |
+| `initializeSpecs` | `(repo: GitHubRepo)` | `Promise<GitHubPullRequest>` | Creates `specl/init-specs-{ts}` branch, pushes `specs/README.md` + `specs/_template.spec.md`, opens a PR |
+
+### Exported Types (Additional)
+
+| Type | Description |
+|------|-------------|
+| `GitHubRepo` | Full repo metadata from GitHub: `full_name`, `name`, `owner`, `default_branch`, `private`, `description`, `updated_at`, `html_url` |
+| `RepoWithSpecs` | Extends `GitHubRepo` with `hasSpecs: boolean` and `specsPath: string \| null` |
 
 ## Invariants
 
@@ -69,6 +81,10 @@ Provides GitHub API integration for the Specl application, enabling users to con
 7. File content is Base64-decoded on read and Base64-encoded (with UTF-8 handling) on write
 8. Loading and error signals are set/cleared around all async operations
 9. On app startup, config is restored from localStorage (but `connected` remains false until `connect()` is called)
+10. `listReposWithSpecs()` scans repos in parallel batches of 5 to avoid GitHub API rate limits
+11. `scanRepoForSpecs()` checks `specs`, `spec`, and `docs/specs` directories in order; returns the first path containing `.spec.md` files or subdirectories
+12. `initializeSpecs()` works without `requireConfig()` — it uses the OAuth token directly since the repo isn't connected yet
+13. `initializeSpecs()` creates a unique branch `specl/init-specs-{timestamp}` and pushes a README explaining the spec format plus a `_template.spec.md` starter
 
 ## Behavioral Examples
 
@@ -128,6 +144,7 @@ Provides GitHub API integration for the Specl application, enabling users to con
 | Module | What is used |
 |--------|-------------|
 | `github-connect` | `connect`, `connectWithOAuth`, `disconnect`, `pullSpecs`, signals |
+| `repo-browser` | `listReposWithSpecs`, `quickConnect`, `initializeSpecs`, `error` signal |
 | `editor-page` | `connected`, `createSpecPR` for PR creation |
 
 ## Change Log
@@ -136,3 +153,4 @@ Provides GitHub API integration for the Specl application, enabling users to con
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec — GitHub integration for pull/push/PR workflows |
 | 2026-02-24 | CorvidAgent | Add OAuth token fallback via `GitHubOAuthService`, add `connectWithOAuth` method |
+| 2026-02-24 | CorvidAgent | Add repo browsing methods: `listUserRepos`, `scanRepoForSpecs`, `listReposWithSpecs`, `quickConnect`, `initializeSpecs` |
