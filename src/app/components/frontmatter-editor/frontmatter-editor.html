@@ -92,9 +92,15 @@
       <input
         type="text"
         [(ngModel)]="newDep"
-        placeholder="specs/category/dep.spec.md"
+        placeholder="module-name"
+        list="dep-suggestions"
         (keyup.enter)="addDependency()"
       />
+      <datalist id="dep-suggestions">
+        @for (mod of availableModules(); track mod) {
+          <option [value]="mod"></option>
+        }
+      </datalist>
       <button class="btn btn-sm" (click)="addDependency()">Add</button>
     </div>
   </div>

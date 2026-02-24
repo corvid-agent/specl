@@ -8,11 +8,18 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class SpecValidatorService {
-  validate(spec: Spec): ValidationResult {
+  /**
+   * Validate a spec. When knownModules is provided, also checks that
+   * depends_on entries reference existing specs.
+   */
+  validate(spec: Spec, knownModules?: string[]): ValidationResult {
     const errors: ValidationError[] = [];
 
     this.validateFrontmatter(spec, errors);
     this.validateSections(spec, errors);
+    if (knownModules) {
+      this.validateDependencyRefs(spec, knownModules, errors);
+    }
 
     return {
       valid: errors.every((e) => e.level === 'warning'),
@@ -42,6 +49,23 @@ export class SpecValidatorService {
     for (const file of fm.files) {
       if (!file || file.trim() === '') {
         errors.push({ level: 'error', field: 'files', message: 'File paths must not be empty' });
+      }
+    }
+  }
+
+  private validateDependencyRefs(
+    spec: Spec,
+    knownModules: string[],
+    errors: ValidationError[],
+  ): void {
+    const known = new Set(knownModules);
+    for (const dep of spec.frontmatter.depends_on) {
+      if (!known.has(dep)) {
+        errors.push({
+          level: 'warning',
+          field: 'depends_on',
+          message: `Dependency "${dep}" does not match any known spec module`,
+        });
       }
     }
   }
