@@ -4,29 +4,46 @@
     <button class="btn btn-secondary" (click)="onImport()">Import</button>
   </div>
 
-  @for (entry of store.suites() | keyvalue; track entry.key) {
-    <div class="suite-group">
-      <div class="suite-name">{{ entry.key }}</div>
-      @for (spec of entry.value; track spec.id) {
-        <div
-          class="spec-item"
-          [class.active]="store.activeSpec()?.id === spec.id"
-          (click)="onSelectSpec(spec.id!)"
+  <div class="suite-scroll-area">
+    @for (entry of store.suites() | keyvalue; track entry.key) {
+      <div class="suite-group">
+        <button
+          class="suite-header"
+          [class.collapsed]="isSuiteCollapsed(entry.key)"
+          (click)="toggleSuite(entry.key)"
         >
-          <div class="spec-info">
-            <span class="spec-filename">{{ spec.filename }}</span>
-            <span class="spec-module">{{ spec.frontmatter.module || 'untitled' }}</span>
+          <span class="suite-chevron">&#9656;</span>
+          <span class="suite-name">{{ entry.key }}</span>
+          <span class="suite-count">{{ entry.value.length }}</span>
+        </button>
+        @if (!isSuiteCollapsed(entry.key)) {
+          <div class="suite-items">
+            @for (spec of entry.value; track spec.id) {
+              <div
+                class="spec-item"
+                [class.active]="store.activeSpec()?.id === spec.id"
+                (click)="onSelectSpec(spec.id!)"
+              >
+                <div class="spec-info">
+                  <div class="spec-top-row">
+                    <span class="spec-filename">{{ spec.filename }}</span>
+                    <span class="spec-status" [attr.data-status]="spec.frontmatter.status">
+                      {{ spec.frontmatter.status }}
+                    </span>
+                    <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" title="Delete spec">
+                      &times;
+                    </button>
+                  </div>
+                  <span class="spec-module">{{ spec.frontmatter.module || 'untitled' }}</span>
+                  <span class="spec-preview">{{ getPreview(spec) }}</span>
+                </div>
+              </div>
+            }
           </div>
-          <span class="spec-status" [attr.data-status]="spec.frontmatter.status">
-            {{ spec.frontmatter.status }}
-          </span>
-          <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" title="Delete spec">
-            &times;
-          </button>
-        </div>
-      }
-    </div>
-  }
+        }
+      </div>
+    }
+  </div>
 
   @if (store.allSpecs().length === 0) {
     <div class="empty-state">

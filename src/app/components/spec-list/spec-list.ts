@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { SpecStoreService } from '../../services/spec-store.service';
 import { GitHubConnectComponent } from '../github-connect/github-connect';
+import type { Spec } from '../../models/spec.model';
 
 @Component({
   selector: 'app-spec-list',
@@ -14,6 +15,9 @@ import { GitHubConnectComponent } from '../github-connect/github-connect';
 export class SpecListComponent {
   protected readonly store = inject(SpecStoreService);
   private readonly router = inject(Router);
+
+  /** Tracks which suite folders are collapsed */
+  protected readonly collapsedSuites = signal(new Set<string>());
 
   async onCreateSpec(): Promise<void> {
     const spec = await this.store.createSpec();
@@ -58,5 +62,35 @@ export class SpecListComponent {
         await this.router.navigate(['/edit', last.id]);
       }
     }
+  }
+
+  toggleSuite(suiteName: string): void {
+    this.collapsedSuites.update((set) => {
+      const next = new Set(set);
+      if (next.has(suiteName)) {
+        next.delete(suiteName);
+      } else {
+        next.add(suiteName);
+      }
+      return next;
+    });
+  }
+
+  isSuiteCollapsed(suiteName: string): boolean {
+    return this.collapsedSuites().has(suiteName);
+  }
+
+  /** Extract a one-line preview from the spec body */
+  getPreview(spec: Spec): string {
+    if (!spec.body) return 'No description';
+    // Find the Purpose section or use the first non-heading line
+    const lines = spec.body.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('|') && !trimmed.startsWith('---')) {
+        return trimmed.length > 80 ? trimmed.slice(0, 80) + '...' : trimmed;
+      }
+    }
+    return 'No description';
   }
 }
