@@ -61,14 +61,26 @@ export class SpecValidatorService {
       }
     }
 
-    // Warn on empty sections
-    for (const section of spec.sections) {
+    // Warn on empty sections (level-2 sections with subsections are not empty)
+    const sections = spec.sections;
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
       if (section.level === 2 && (!section.content || section.content.trim() === '')) {
-        errors.push({
-          level: 'warning',
-          field: 'sections',
-          message: `Section "## ${section.heading}" is empty`,
-        });
+        let hasSubContent = false;
+        for (let j = i + 1; j < sections.length; j++) {
+          if (sections[j].level <= 2) break;
+          if (sections[j].content && sections[j].content.trim() !== '') {
+            hasSubContent = true;
+            break;
+          }
+        }
+        if (!hasSubContent) {
+          errors.push({
+            level: 'warning',
+            field: 'sections',
+            message: `Section "## ${section.heading}" is empty`,
+          });
+        }
       }
     }
   }

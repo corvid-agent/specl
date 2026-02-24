@@ -17,6 +17,9 @@
 .sidebar-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
@@ -27,8 +30,79 @@
   letter-spacing: -0.02em;
 }
 
+.sidebar-close {
+  display: none;
+  font-size: 20px;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
 .content {
   flex: 1;
   overflow: auto;
   background: var(--surface);
+  position: relative;
+}
+
+/* Mobile layout: sidebar becomes a full-screen overlay */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    min-width: unset;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+
+    &.sidebar-open {
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-close {
+    display: flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+
+    &.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .content {
+    width: 100%;
+  }
 }

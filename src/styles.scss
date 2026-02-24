@@ -180,3 +180,22 @@ body {
     }
   }
 }
+
+/* Mobile: larger touch targets */
+@media (max-width: 767px) {
+  .btn {
+    min-height: 36px;
+    padding: 8px 14px;
+  }
+
+  .btn-sm {
+    min-height: 32px;
+    padding: 6px 10px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}

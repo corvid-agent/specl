@@ -33,7 +33,7 @@ Validates a Spec against the required structure and frontmatter rules. Produces 
 1. `valid` is `true` if and only if there are zero errors with `level: 'error'` — warnings do not affect validity
 2. Frontmatter validation checks: module non-empty, version >= 1, status is 'draft' or 'active', files array has at least 1 non-empty entry
 3. Section validation checks all 7 `REQUIRED_SECTIONS` are present as level-2 headings
-4. Empty level-2 sections produce warnings, not errors
+4. Empty level-2 sections produce warnings, not errors — but sections with subsections (level 3+) containing content are not considered empty
 5. The method always returns a `ValidationResult` — never throws
 
 ## Behavioral Examples
@@ -99,3 +99,4 @@ Validates a Spec against the required structure and frontmatter rules. Produces 
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Fix: sections with subsections no longer flagged as empty |
