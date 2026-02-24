@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
+import { GitHubOAuthService } from './github-oauth.service';
 
 export interface GitHubConfig {
   token: string;
@@ -26,6 +27,7 @@ const STORAGE_KEY = 'specl:github-config';
 
 @Injectable({ providedIn: 'root' })
 export class GitHubService {
+  private readonly oauth = inject(GitHubOAuthService);
   private readonly _config = signal<GitHubConfig | null>(this.loadConfig());
   private readonly _connected = signal(false);
   private readonly _loading = signal(false);
@@ -65,6 +67,21 @@ export class GitHubService {
     } finally {
       this._loading.set(false);
     }
+  }
+
+  /**
+   * Connect using only the OAuth token (no PAT needed).
+   * Requires owner, repo, branch, and specsPath — token comes from GitHubOAuthService.
+   */
+  async connectWithOAuth(repoConfig: Omit<GitHubConfig, 'token'>): Promise<boolean> {
+    const oauthToken = this.oauth.accessToken();
+    if (!oauthToken) {
+      this._error.set('Not signed in with GitHub OAuth');
+      return false;
+    }
+
+    const config: GitHubConfig = { ...repoConfig, token: '' };
+    return this.connect(config);
   }
 
   /**
@@ -293,8 +310,10 @@ export class GitHubService {
       'X-GitHub-Api-Version': '2022-11-28',
     };
 
-    if (cfg?.token) {
-      headers['Authorization'] = `Bearer ${cfg.token}`;
+    // Use PAT if available, otherwise fall back to OAuth token
+    const token = cfg?.token || this.oauth.accessToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     return fetch(`https://api.github.com${path}`, {
