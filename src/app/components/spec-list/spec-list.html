@@ -5,7 +5,7 @@
   </div>
 
   <div class="suite-scroll-area">
-    @for (entry of store.suites() | keyvalue; track entry.key) {
+    @for (entry of store.suites() | keyvalue:suiteOrder; track entry.key) {
       <div class="suite-group">
         <button
           class="suite-header"

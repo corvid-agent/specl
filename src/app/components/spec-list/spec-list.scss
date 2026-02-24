@@ -1,7 +1,15 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .spec-list {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   padding: 12px;
 }

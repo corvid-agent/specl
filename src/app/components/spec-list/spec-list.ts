@@ -80,6 +80,13 @@ export class SpecListComponent {
     return this.collapsedSuites().has(suiteName);
   }
 
+  /** Comparator for keyvalue pipe: 'default' first, then alphabetical */
+  suiteOrder = (a: { key: string }, b: { key: string }): number => {
+    if (a.key === 'default') return -1;
+    if (b.key === 'default') return 1;
+    return a.key.localeCompare(b.key);
+  };
+
   /** Extract a one-line preview from the spec body */
   getPreview(spec: Spec): string {
     if (!spec.body) return 'No description';
