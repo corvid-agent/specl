@@ -21,6 +21,7 @@ export class RepoBrowserComponent implements OnInit {
   readonly initResult = signal<{ repo: string; pr: GitHubPullRequest } | null>(null);
 
 
+
   /** Emitted when user wants to use manual form instead */
   readonly manualConnect = output<void>();
 
