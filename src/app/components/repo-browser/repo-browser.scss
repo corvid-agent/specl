@@ -149,6 +149,47 @@
   white-space: nowrap;
 }
 
+.add-specs-btn {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--accent, #58a6ff);
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--accent, #58a6ff);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.1s;
+
+  &:hover:not(:disabled) {
+    background: rgba(88, 166, 255, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.init-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--status-active, #3fb950);
+  border-radius: 6px;
+  background: rgba(63, 185, 80, 0.08);
+  font-size: 12px;
+}
+
+.init-result-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .repo-private-badge {
   font-size: 10px;
   padding: 1px 5px;

@@ -1,5 +1,5 @@
 import { Component, inject, signal, output, OnInit } from '@angular/core';
-import { GitHubService, type RepoWithSpecs } from '../../services/github.service';
+import { GitHubService, type RepoWithSpecs, type GitHubPullRequest } from '../../services/github.service';
 import { GitHubOAuthService } from '../../services/github-oauth.service';
 
 @Component({
@@ -17,6 +17,8 @@ export class RepoBrowserComponent implements OnInit {
   readonly scanned = signal(false);
   readonly filter = signal('');
   readonly connecting = signal<string | null>(null);
+  readonly initializing = signal<string | null>(null);
+  readonly initResult = signal<{ repo: string; pr: GitHubPullRequest } | null>(null);
 
   /** Emitted when user wants to use manual form instead */
   readonly manualConnect = output<void>();
@@ -61,6 +63,32 @@ export class RepoBrowserComponent implements OnInit {
     } finally {
       this.connecting.set(null);
     }
+  }
+
+  async onInitSpecs(event: Event, repo: RepoWithSpecs): Promise<void> {
+    event.stopPropagation();
+    this.initializing.set(repo.full_name);
+    this.initResult.set(null);
+
+    try {
+      const pr = await this.github.initializeSpecs(repo);
+      this.initResult.set({ repo: repo.full_name, pr });
+
+      // Mark repo as having specs now (optimistic update)
+      this.repos.update((repos) =>
+        repos.map((r) =>
+          r.full_name === repo.full_name
+            ? { ...r, hasSpecs: true, specsPath: 'specs' }
+            : r,
+        ),
+      );
+    } finally {
+      this.initializing.set(null);
+    }
+  }
+
+  dismissInitResult(): void {
+    this.initResult.set(null);
   }
 
   updateFilter(event: Event): void {

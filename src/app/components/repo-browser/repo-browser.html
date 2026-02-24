@@ -4,6 +4,23 @@
     <button class="btn btn-sm" (click)="onManual()">Manual</button>
   </div>
 
+  @if (initResult(); as result) {
+    <div class="init-result">
+      <div class="init-result-text">
+        Specs initialized in <strong>{{ result.repo }}</strong>
+      </div>
+      <a
+        class="btn btn-sm btn-primary"
+        [href]="result.pr.html_url"
+        target="_blank"
+        rel="noopener"
+      >
+        View PR #{{ result.pr.number }}
+      </a>
+      <button class="btn btn-sm" (click)="dismissInitResult()">Dismiss</button>
+    </div>
+  }
+
   @if (scanning()) {
     <div class="repo-scanning">
       <span class="spinner"></span>
@@ -24,7 +41,7 @@
           <button
             class="repo-item"
             [class.has-specs]="repo.hasSpecs"
-            [disabled]="connecting() !== null"
+            [disabled]="connecting() !== null || initializing() !== null"
             (click)="onSelectRepo(repo)"
           >
             <div class="repo-item-main">
@@ -41,10 +58,18 @@
             <div class="repo-item-status">
               @if (connecting() === repo.full_name) {
                 <span class="spinner small"></span>
+              } @else if (initializing() === repo.full_name) {
+                <span class="spinner small"></span>
               } @else if (repo.hasSpecs) {
                 <span class="spec-badge">specs found</span>
               } @else {
-                <span class="no-spec-badge">no specs</span>
+                <button
+                  class="add-specs-btn"
+                  (click)="onInitSpecs($event, repo)"
+                  [disabled]="initializing() !== null"
+                >
+                  Add Specs
+                </button>
               }
             </div>
           </button>
