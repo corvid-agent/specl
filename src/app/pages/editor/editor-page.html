@@ -1,6 +1,9 @@
 @if (spec(); as s) {
   <div class="editor-page">
     <header class="editor-toolbar">
+      <button class="btn-icon back-to-nav-btn" (click)="onBackToNav()" aria-label="Back to sections">
+        &#8592;
+      </button>
       <input
         class="filename-input"
         [value]="filename()"
@@ -26,19 +29,34 @@
         </div>
         <button class="btn btn-sm" (click)="onValidate()">Validate</button>
         <button class="btn btn-sm" (click)="onExport()">Export</button>
+        @if (canCreatePR()) {
+          <button
+            class="btn btn-sm btn-primary"
+            (click)="onCreatePR()"
+            [disabled]="prLoading()"
+          >
+            @if (prLoading()) { Creating PR... } @else { Create PR }
+          </button>
+        }
       </div>
     </header>
 
+    @if (prUrl()) {
+      <div class="pr-banner">
+        PR created: <a [href]="prUrl()" target="_blank" rel="noopener">{{ prUrl() }}</a>
+      </div>
+    }
+
     <div class="editor-body">
       @if (activeTab() === 'edit') {
-        <aside class="editor-sidebar">
+        <aside class="editor-sidebar" [class.mobile-open]="mobileNavOpen()">
           <app-section-nav
             [sections]="editableSections()"
             [activeIndex]="activeSectionIndex()"
             (selectIndex)="onNavigate($event)"
           />
         </aside>
-        <div class="editor-main">
+        <div class="editor-main" [class.mobile-hidden]="mobileNavOpen()">
           @if (activeSectionIndex() === -1) {
             <div class="section-panel">
               <div class="section-panel-header">

@@ -44,7 +44,7 @@ Central state management for the Specl application using Angular signals. Coordi
 | `updateActiveSpec` | `(partial: Partial<Spec>)` | `Promise<void>` | Patches the active spec, saves to DB, updates store, clears dirty flag |
 | `markDirty` | `()` | `void` | Sets the dirty flag to true |
 | `deleteSpec` | `(id: number)` | `Promise<void>` | Deletes from DB, removes from store, clears active if it was selected |
-| `importMarkdownFiles` | `(files: {name, content, path?}[])` | `Promise<number>` | Parses and imports multiple markdown files, returns count imported |
+| `importMarkdownFiles` | `(files: {name, content, path?, sha?}[])` | `Promise<number>` | Parses and imports multiple markdown files, stores `githubSha` if provided, returns count imported |
 | `exportSpec` | `(id: number)` | `Promise<string \| null>` | Serializes a spec to markdown string, returns null if not found |
 | `validateActiveSpec` | `()` | `ValidationResult \| null` | Validates the active spec, returns null if no active spec |
 
@@ -122,3 +122,4 @@ Central state management for the Specl application using Angular signals. Coordi
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Add `sha` param to `importMarkdownFiles` for GitHub integration |

@@ -13,6 +13,14 @@
   background: var(--surface);
 }
 
+.back-to-nav-btn {
+  display: none;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
 .filename-input {
   font-size: 15px;
   font-weight: 600;
@@ -22,6 +30,7 @@
   padding: 4px 8px;
   border-radius: 4px;
   flex: 1;
+  min-width: 0;
 
   &:hover {
     background: var(--hover);
@@ -138,4 +147,75 @@
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
+}
+
+.pr-banner {
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  font-size: 13px;
+  color: var(--text-primary);
+
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+    word-break: break-all;
+  }
+}
+
+/* Mobile: editor sidebar becomes full-width, toggled with back button */
+@media (max-width: 767px) {
+  .editor-toolbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .back-to-nav-btn {
+    display: flex;
+  }
+
+  .toolbar-actions {
+    gap: 4px;
+
+    .btn {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+  }
+
+  .editor-body {
+    flex-direction: column;
+  }
+
+  .editor-sidebar {
+    width: 100%;
+    min-width: unset;
+    flex: 1;
+    border-right: none;
+    display: none;
+
+    &.mobile-open {
+      display: flex;
+    }
+  }
+
+  .editor-main {
+    display: flex;
+
+    &.mobile-hidden {
+      display: none;
+    }
+  }
+
+  .section-panel-header {
+    padding: 12px 16px 8px;
+  }
+
+  .section-panel-body {
+    padding: 0;
+  }
+
+  .section-panel-footer {
+    padding: 8px 16px;
+  }
 }

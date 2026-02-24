@@ -34,4 +34,6 @@
       <p>Create a new spec or import existing <code>.spec.md</code> files.</p>
     </div>
   }
+
+  <app-github-connect (specsPulled)="onGitHubPull($event)" />
 </div>
