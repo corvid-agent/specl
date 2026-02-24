@@ -35,10 +35,13 @@
         <button class="btn btn-sm" (click)="copyCode()">Copy</button>
       </div>
       <p class="device-flow-hint">
-        @if (oauth.state() === 'awaiting_code') {
-          Opening GitHub...
-        } @else {
-          Waiting for authorization...
+        @if (oauth.verificationUri()) {
+          <a [href]="oauth.verificationUri()" target="_blank" rel="noopener" class="verification-link">
+            Open GitHub to enter your code
+          </a>
+        }
+        @if (oauth.state() === 'polling') {
+          <span class="polling-status">Waiting for authorization...</span>
         }
       </p>
       <button class="btn btn-sm" (click)="onCancelFlow()">Cancel</button>

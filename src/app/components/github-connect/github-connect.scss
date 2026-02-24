@@ -106,6 +106,23 @@
 .device-flow-hint {
   font-size: 12px;
   color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.verification-link {
+  color: var(--accent, #58a6ff);
+  text-decoration: underline;
+  font-weight: 500;
+
+  &:hover {
+    color: var(--accent-hover, #79b8ff);
+  }
+}
+
+.polling-status {
+  font-style: italic;
 }
 
 // OAuth signed in but no repo connected
