@@ -23,6 +23,22 @@ export interface GitHubPullRequest {
   state: string;
 }
 
+export interface GitHubRepo {
+  full_name: string;
+  name: string;
+  owner: { login: string };
+  default_branch: string;
+  private: boolean;
+  description: string | null;
+  updated_at: string;
+  html_url: string;
+}
+
+export interface RepoWithSpecs extends GitHubRepo {
+  hasSpecs: boolean;
+  specsPath: string | null;
+}
+
 const STORAGE_KEY = 'specl:github-config';
 
 @Injectable({ providedIn: 'root' })
@@ -293,6 +309,120 @@ export class GitHubService {
       title,
       description,
     );
+  }
+
+  /**
+   * List repositories accessible to the authenticated user.
+   * Fetches up to 100 repos sorted by most recently updated.
+   */
+  async listUserRepos(): Promise<GitHubRepo[]> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    try {
+      const res = await this.api('/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? `HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to list repos';
+      this._error.set(msg);
+      return [];
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
+   * Check if a repo has spec files by looking for common spec directories.
+   * Returns the specs path if found, null otherwise.
+   */
+  async scanRepoForSpecs(owner: string, repo: string, branch: string): Promise<string | null> {
+    const candidates = ['specs', 'spec', 'docs/specs'];
+
+    for (const candidate of candidates) {
+      try {
+        const res = await this.api(
+          `/repos/${owner}/${repo}/contents/${candidate}?ref=${branch}`,
+        );
+        if (!res.ok) continue;
+
+        const data: Array<{ name: string; type: string }> = await res.json();
+        const hasSpecFiles = data.some(
+          (item) => item.name.endsWith('.spec.md') || item.type === 'dir',
+        );
+        if (hasSpecFiles) return candidate;
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * List repos and check each for spec files.
+   * Scans in parallel (batched) for speed.
+   */
+  async listReposWithSpecs(): Promise<RepoWithSpecs[]> {
+    const repos = await this.listUserRepos();
+    if (repos.length === 0) return [];
+
+    this._loading.set(true);
+
+    try {
+      // Scan repos in parallel batches of 5 to avoid rate limiting
+      const results: RepoWithSpecs[] = [];
+      const batchSize = 5;
+
+      for (let i = 0; i < repos.length; i += batchSize) {
+        const batch = repos.slice(i, i + batchSize);
+        const scanned = await Promise.all(
+          batch.map(async (repo) => {
+            const specsPath = await this.scanRepoForSpecs(
+              repo.owner.login,
+              repo.name,
+              repo.default_branch,
+            );
+            return {
+              ...repo,
+              hasSpecs: specsPath !== null,
+              specsPath,
+            } as RepoWithSpecs;
+          }),
+        );
+        results.push(...scanned);
+      }
+
+      // Sort: repos with specs first, then by updated_at
+      results.sort((a, b) => {
+        if (a.hasSpecs && !b.hasSpecs) return -1;
+        if (!a.hasSpecs && b.hasSpecs) return 1;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+
+      return results;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
+   * Quick-connect to a repo using its metadata. Fills in defaults automatically.
+   */
+  async quickConnect(repo: RepoWithSpecs): Promise<boolean> {
+    const repoConfig = {
+      owner: repo.owner.login,
+      repo: repo.name,
+      branch: repo.default_branch,
+      specsPath: repo.specsPath ?? 'specs',
+    };
+
+    if (this.oauth.accessToken()) {
+      return this.connectWithOAuth(repoConfig);
+    }
+    return false;
   }
 
   // ─── Private helpers ─────────────────────────────────────────────

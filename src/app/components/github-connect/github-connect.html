@@ -56,12 +56,11 @@
         />
         <span class="connection-label">{{ oauth.username() }}</span>
       </div>
-      <button class="btn btn-sm github-toggle" (click)="toggleForm()">
-        @if (showForm()) { Cancel } @else { Connect Repo }
-      </button>
+      <button class="btn btn-sm" (click)="onSignOut()">Sign Out</button>
     </div>
 
-    @if (showForm()) {
+    @if (showManualForm()) {
+      <!-- Manual connect form (fallback) -->
       <div class="github-form">
         <div class="form-row">
           <label class="form-field">
@@ -117,8 +116,13 @@
         >
           @if (github.loading()) { Connecting... } @else { Connect }
         </button>
-        <button class="btn btn-sm" (click)="onSignOut()">Sign Out</button>
       </div>
+    } @else {
+      <!-- Repo browser (default after OAuth) -->
+      <app-repo-browser
+        (manualConnect)="onManualConnect()"
+        (connected)="onRepoBrowserConnected()"
+      />
     }
   } @else {
     <!-- Not signed in, not connected -->

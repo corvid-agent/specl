@@ -1,0 +1,65 @@
+<div class="repo-browser">
+  <div class="repo-browser-header">
+    <span class="repo-browser-title">Your Repositories</span>
+    <button class="btn btn-sm" (click)="onManual()">Manual</button>
+  </div>
+
+  @if (scanning()) {
+    <div class="repo-scanning">
+      <span class="spinner"></span>
+      <span>Scanning repositories for specs...</span>
+    </div>
+  } @else if (scanned()) {
+    @if (repos().length > 0) {
+      <input
+        type="text"
+        class="repo-filter"
+        placeholder="Filter repos..."
+        [value]="filter()"
+        (input)="updateFilter($event)"
+      />
+
+      <div class="repo-list">
+        @for (repo of filteredRepos(); track repo.full_name) {
+          <button
+            class="repo-item"
+            [class.has-specs]="repo.hasSpecs"
+            [disabled]="connecting() !== null"
+            (click)="onSelectRepo(repo)"
+          >
+            <div class="repo-item-main">
+              <div class="repo-item-name">
+                @if (repo.private) {
+                  <span class="repo-private-badge">private</span>
+                }
+                <span>{{ repo.full_name }}</span>
+              </div>
+              @if (repo.description) {
+                <div class="repo-item-desc">{{ repo.description }}</div>
+              }
+            </div>
+            <div class="repo-item-status">
+              @if (connecting() === repo.full_name) {
+                <span class="spinner small"></span>
+              } @else if (repo.hasSpecs) {
+                <span class="spec-badge">specs found</span>
+              } @else {
+                <span class="no-spec-badge">no specs</span>
+              }
+            </div>
+          </button>
+        }
+      </div>
+
+      @if (filteredRepos().length === 0) {
+        <div class="repo-empty">No repos match "{{ filter() }}"</div>
+      }
+    } @else {
+      <div class="repo-empty">No repositories found.</div>
+    }
+  }
+
+  @if (github.error()) {
+    <div class="form-error">{{ github.error() }}</div>
+  }
+</div>
