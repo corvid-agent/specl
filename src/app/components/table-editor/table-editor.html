@@ -1,0 +1,50 @@
+<div class="table-editor">
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          @for (header of table().headers; track $index) {
+            <th>{{ header }}</th>
+          }
+          <th class="actions-col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of table().rows; track $index; let rowIdx = $index) {
+          <tr>
+            @for (cell of row; track $index; let colIdx = $index) {
+              <td>
+                <input
+                  type="text"
+                  class="cell-input"
+                  [ngModel]="cell"
+                  (ngModelChange)="onCellChange(rowIdx, colIdx, $event)"
+                  [placeholder]="table().headers[colIdx]"
+                />
+              </td>
+            }
+            <td class="actions-cell">
+              <div class="row-actions">
+                @if (rowIdx > 0) {
+                  <button class="btn-icon" (click)="moveRowUp(rowIdx)" title="Move up">&#8593;</button>
+                }
+                @if (rowIdx < table().rows.length - 1) {
+                  <button class="btn-icon" (click)="moveRowDown(rowIdx)" title="Move down">&#8595;</button>
+                }
+                <button class="btn-icon btn-danger" (click)="removeRow(rowIdx)" title="Remove row">&times;</button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (isEmpty()) {
+    <div class="empty-state">No rows yet. Add one below.</div>
+  }
+
+  <div class="table-footer">
+    <button class="btn btn-sm" (click)="addRow()">+ Add Row</button>
+  </div>
+</div>
