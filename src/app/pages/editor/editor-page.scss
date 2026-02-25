@@ -67,8 +67,8 @@
   transition: all 0.15s;
 
   &.active {
-    background: var(--surface);
-    color: var(--text-primary);
+    background: var(--accent);
+    color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
