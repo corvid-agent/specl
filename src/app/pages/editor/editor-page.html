@@ -66,8 +66,15 @@
           @if (activeSectionIndex() === -1) {
             <div class="section-panel">
               <div class="section-panel-header">
-                <h2>Frontmatter</h2>
-                <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
+                <div class="section-panel-header-text">
+                  <h2>Frontmatter</h2>
+                  <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
+                </div>
+                @if (editableSections().length > 0) {
+                  <div class="section-nav-buttons">
+                    <button class="btn btn-sm" (click)="onNavigate(0)">Next &#8594;</button>
+                  </div>
+                }
               </div>
               <div class="section-panel-body">
                 <app-frontmatter-editor
@@ -76,13 +83,6 @@
                   (frontmatterChange)="onFrontmatterChange($event)"
                 />
               </div>
-              <footer class="section-panel-footer">
-                @if (editableSections().length > 0) {
-                  <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
-                    Next: {{ editableSections()[0].heading }}
-                  </button>
-                }
-              </footer>
             </div>
           } @else if (activeEditableSection(); as sec) {
             <app-section-editor
