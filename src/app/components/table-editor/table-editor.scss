@@ -1,0 +1,122 @@
+.table-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead {
+  background: var(--surface-alt);
+
+  th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+}
+
+tbody {
+  tr {
+    border-bottom: 1px solid var(--border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: var(--hover);
+    }
+  }
+
+  td {
+    padding: 2px 4px;
+    vertical-align: middle;
+  }
+}
+
+.cell-input {
+  width: 100%;
+  min-width: 80px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  &:hover {
+    border-color: var(--border);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--accent-ring);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+    font-family: inherit;
+    font-style: italic;
+    opacity: 0.5;
+  }
+}
+
+.actions-col {
+  width: 80px;
+}
+
+.actions-cell {
+  width: 80px;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+
+  tr:hover & {
+    opacity: 1;
+  }
+}
+
+.btn-danger {
+  &:hover {
+    color: var(--status-error) !important;
+    background: var(--status-error-bg) !important;
+  }
+}
+
+.empty-state {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.table-footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-alt);
+}
