@@ -20,6 +20,29 @@
   </header>
 
   <div class="section-body">
-    <div #sectionEditorHost class="editor-host"></div>
+    @if (hasTable()) {
+      <!-- Structured editing mode: forms for tables, textareas for text -->
+      <div class="structured-content">
+        @for (block of contentBlocks(); track $index; let blockIdx = $index) {
+          @if (block.type === 'table' && block.table) {
+            <app-table-editor
+              [table]="block.table"
+              (tableChange)="onTableChange(blockIdx, $event)"
+            />
+          } @else if (block.type === 'text') {
+            <textarea
+              class="text-block"
+              [ngModel]="block.text ?? ''"
+              (ngModelChange)="onTextBlockChange(blockIdx, $event)"
+              placeholder="Enter text..."
+              rows="3"
+            ></textarea>
+          }
+        }
+      </div>
+    } @else {
+      <!-- CodeMirror mode for sections without tables -->
+      <div #sectionEditorHost class="editor-host"></div>
+    }
   </div>
 </div>

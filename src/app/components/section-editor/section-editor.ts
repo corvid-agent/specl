@@ -7,6 +7,7 @@ import {
   effect,
   OnDestroy,
   signal,
+  computed,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EditorState } from '@codemirror/state';
@@ -16,11 +17,18 @@ import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { type SpecSection } from '../../models/spec.model';
+import {
+  type ContentBlock,
+  type MarkdownTable,
+  parseContentBlocks,
+  serializeContentBlocks,
+} from '../../models/markdown-table';
+import { TableEditorComponent } from '../table-editor/table-editor';
 
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TableEditorComponent],
   templateUrl: './section-editor.html',
   styleUrl: './section-editor.scss',
 })
@@ -30,32 +38,61 @@ export class SectionEditorComponent implements OnDestroy {
   readonly totalSections = input.required<number>();
   readonly contentChange = output<string>();
   readonly headingChange = output<string>();
-  readonly navigate = output<number>(); // emit index to navigate to
+  readonly navigate = output<number>();
 
   private readonly editorHost = viewChild<ElementRef<HTMLDivElement>>('sectionEditorHost');
   private view: EditorView | null = null;
   private suppressUpdate = false;
+  private suppressBlockParse = false;
   private currentIndex = -1;
 
   protected readonly headingValue = signal('');
 
+  /** Parsed content blocks for structured editing mode */
+  protected readonly contentBlocks = signal<ContentBlock[]>([]);
+
+  /** Whether this section has any tables (and should use structured mode) */
+  protected readonly hasTable = computed(() =>
+    this.contentBlocks().some((b) => b.type === 'table'),
+  );
+
   constructor() {
     effect(() => {
-      const host = this.editorHost()?.nativeElement;
-      if (!host) return;
-
       const sec = this.section();
       const idx = this.sectionIndex();
 
-      // If section changed, destroy old editor and create new one
-      if (this.currentIndex !== idx) {
-        this.destroyEditor();
-        this.currentIndex = idx;
+      // Parse content blocks on every section change (unless change came from structured editor)
+      if (this.suppressBlockParse) {
+        this.suppressBlockParse = false;
+      } else {
+        const blocks = parseContentBlocks(sec.content);
+        this.contentBlocks.set(blocks);
       }
 
       this.headingValue.set(sec.heading);
 
-      if (this.view) {
+      // If section changed, reset
+      if (this.currentIndex !== idx) {
+        this.destroyEditor();
+        this.currentIndex = idx;
+      }
+    });
+
+    // Separate effect for CodeMirror — only runs when NOT in structured mode
+    effect(() => {
+      const host = this.editorHost()?.nativeElement;
+      if (!host) return; // host doesn't exist (structured mode or not rendered yet)
+
+      const sec = this.section();
+      const idx = this.sectionIndex();
+
+      if (this.hasTable()) {
+        this.destroyEditor();
+        return;
+      }
+
+      // Same index — update existing editor if needed
+      if (this.view && this.currentIndex === idx) {
         if (!this.suppressUpdate) {
           const current = this.view.state.doc.toString();
           if (current !== sec.content) {
@@ -67,6 +104,8 @@ export class SectionEditorComponent implements OnDestroy {
         this.suppressUpdate = false;
         return;
       }
+
+      this.destroyEditor();
 
       this.view = new EditorView({
         state: EditorState.create({
@@ -106,6 +145,29 @@ export class SectionEditorComponent implements OnDestroy {
     this.view = null;
   }
 
+  /** Emit full serialized content from structured blocks */
+  private emitFromBlocks(blocks: ContentBlock[]): void {
+    this.contentBlocks.set(blocks);
+    const content = serializeContentBlocks(blocks);
+    this.suppressUpdate = true;
+    this.suppressBlockParse = true;
+    this.contentChange.emit(content);
+  }
+
+  protected onTableChange(blockIndex: number, table: MarkdownTable): void {
+    const blocks = this.contentBlocks().map((b, i) =>
+      i === blockIndex ? { ...b, table } : b,
+    );
+    this.emitFromBlocks(blocks);
+  }
+
+  protected onTextBlockChange(blockIndex: number, text: string): void {
+    const blocks = this.contentBlocks().map((b, i) =>
+      i === blockIndex ? { ...b, text } : b,
+    );
+    this.emitFromBlocks(blocks);
+  }
+
   protected onHeadingChange(value: string): void {
     this.headingValue.set(value);
     this.headingChange.emit(value);
@@ -116,7 +178,7 @@ export class SectionEditorComponent implements OnDestroy {
     if (idx > 0) {
       this.navigate.emit(idx - 1);
     } else {
-      this.navigate.emit(-1); // go to frontmatter
+      this.navigate.emit(-1);
     }
   }
 
