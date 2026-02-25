@@ -170,8 +170,9 @@
   color: var(--fg);
   min-width: 0;
 
-  &:focus {
-    outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
     border-color: var(--accent);
   }
 
@@ -187,4 +188,13 @@
   background: rgba(239, 68, 68, 0.1);
   padding: 6px 8px;
   border-radius: 4px;
+
+  &::before {
+    content: 'Error: ';
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
 }

@@ -1,11 +1,11 @@
-<div class="repo-browser">
+<div class="repo-browser" role="region" aria-label="Repository browser">
   <div class="repo-browser-header">
-    <span class="repo-browser-title">Your Repositories</span>
+    <h4 class="repo-browser-title" id="repo-browser-heading">Your Repositories</h4>
     <button class="btn btn-sm" (click)="onManual()">Manual</button>
   </div>
 
   @if (initResult(); as result) {
-    <div class="init-result">
+    <div class="init-result" role="status" aria-live="polite">
       <div class="init-result-text">
         Specs initialized in <strong>{{ result.repo }}</strong>
       </div>
@@ -22,32 +22,38 @@
   }
 
   @if (scanning()) {
-    <div class="repo-scanning">
-      <span class="spinner"></span>
+    <div class="repo-scanning" role="status" aria-live="polite" aria-busy="true">
+      <span class="spinner" aria-hidden="true"></span>
       <span>Scanning repositories for specs...</span>
     </div>
   } @else if (scanned()) {
     @if (repos().length > 0) {
+      <label class="sr-only" for="repo-filter-input">Filter repositories</label>
       <input
+        id="repo-filter-input"
         type="text"
         class="repo-filter"
         placeholder="Filter repos..."
         [value]="filter()"
         (input)="updateFilter($event)"
+        autocomplete="off"
       />
 
-      <div class="repo-list">
+      <div class="repo-list" role="list" aria-labelledby="repo-browser-heading">
         @for (repo of filteredRepos(); track repo.full_name) {
           <button
             class="repo-item"
+            role="listitem"
             [class.has-specs]="repo.hasSpecs"
             [disabled]="connecting() !== null || initializing() !== null"
+            [attr.aria-busy]="connecting() === repo.full_name || initializing() === repo.full_name"
+            [attr.aria-label]="repo.full_name + (repo.hasSpecs ? ' (specs found)' : '') + (repo.private ? ' (private)' : '')"
             (click)="onSelectRepo(repo)"
           >
             <div class="repo-item-main">
               <div class="repo-item-name">
                 @if (repo.private) {
-                  <span class="repo-private-badge">private</span>
+                  <span class="repo-private-badge" aria-hidden="true">private</span>
                 }
                 <span>{{ repo.full_name }}</span>
               </div>
@@ -57,9 +63,11 @@
             </div>
             <div class="repo-item-status">
               @if (connecting() === repo.full_name) {
-                <span class="spinner small"></span>
+                <span class="spinner small" aria-hidden="true"></span>
+                <span class="sr-only">Connecting...</span>
               } @else if (initializing() === repo.full_name) {
-                <span class="spinner small"></span>
+                <span class="spinner small" aria-hidden="true"></span>
+                <span class="sr-only">Initializing specs...</span>
               } @else if (repo.hasSpecs) {
                 <span class="spec-badge">specs found</span>
               } @else {
@@ -67,6 +75,7 @@
                   class="add-specs-btn"
                   (click)="onInitSpecs($event, repo)"
                   [disabled]="initializing() !== null"
+                  [attr.aria-label]="'Add specs to ' + repo.full_name"
                 >
                   Add Specs
                 </button>
@@ -77,14 +86,14 @@
       </div>
 
       @if (filteredRepos().length === 0) {
-        <div class="repo-empty">No repos match "{{ filter() }}"</div>
+        <div class="repo-empty" role="status">No repos match "{{ filter() }}"</div>
       }
     } @else {
-      <div class="repo-empty">No repositories found.</div>
+      <div class="repo-empty" role="status">No repositories found.</div>
     }
   }
 
   @if (github.error()) {
-    <div class="form-error">{{ github.error() }}</div>
+    <div class="form-error" role="alert" aria-live="assertive">{{ github.error() }}</div>
   }
 </div>

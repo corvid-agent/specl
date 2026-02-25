@@ -1,5 +1,10 @@
 <div class="shell">
-  <aside class="sidebar" [class.sidebar-open]="sidebarOpen()">
+  <aside
+    class="sidebar"
+    [class.sidebar-open]="sidebarOpen()"
+    role="complementary"
+    aria-label="Spec navigation"
+  >
     <div class="sidebar-header">
       <h1 class="logo">Specl</h1>
       <button class="btn-icon sidebar-close" (click)="toggleSidebar()" aria-label="Close sidebar">
@@ -8,9 +13,19 @@
     </div>
     <app-spec-list />
   </aside>
-  <div class="sidebar-backdrop" [class.visible]="sidebarOpen()" (click)="toggleSidebar()"></div>
-  <main class="content">
-    <button class="btn-icon mobile-menu-btn" (click)="toggleSidebar()" aria-label="Open sidebar">
+  <div
+    class="sidebar-backdrop"
+    [class.visible]="sidebarOpen()"
+    (click)="toggleSidebar()"
+    aria-hidden="true"
+  ></div>
+  <main id="main-content" class="content" role="main">
+    <button
+      class="btn-icon mobile-menu-btn"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="sidebarOpen() ? 'Close sidebar' : 'Open sidebar'"
+      [attr.aria-expanded]="sidebarOpen()"
+    >
       &#9776;
     </button>
     <router-outlet />

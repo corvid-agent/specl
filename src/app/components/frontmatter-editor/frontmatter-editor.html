@@ -1,5 +1,5 @@
-<div class="frontmatter-editor">
-  <h3 class="section-title">Frontmatter</h3>
+<form class="frontmatter-editor" ngNoForm (submit)="$event.preventDefault()" aria-label="Frontmatter editor">
+  <h3 class="section-title" id="fm-heading">Frontmatter</h3>
 
   <div class="field">
     <label for="fm-module">Module</label>
@@ -9,6 +9,7 @@
       [ngModel]="frontmatter().module"
       (ngModelChange)="onFieldChange('module', $event)"
       placeholder="module-name"
+      autocomplete="off"
     />
   </div>
 
@@ -36,65 +37,80 @@
     </div>
   </div>
 
-  <div class="field">
-    <label>Files</label>
-    <div class="list-items">
+  <fieldset class="field">
+    <legend>Files</legend>
+    <div class="list-items" role="list" aria-label="Added files">
       @for (file of frontmatter().files; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ file }}</code>
-          <button class="btn-icon" (click)="removeFile($index)">&times;</button>
+          <button class="btn-icon" (click)="removeFile($index)" [attr.aria-label]="'Remove file ' + file">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
     <div class="add-row">
+      <label class="sr-only" for="fm-new-file">Add file path</label>
       <input
+        id="fm-new-file"
         type="text"
         [(ngModel)]="newFile"
         placeholder="server/path/to/file.ts"
         (keyup.enter)="addFile()"
+        autocomplete="off"
       />
       <button class="btn btn-sm" (click)="addFile()">Add</button>
     </div>
-  </div>
+  </fieldset>
 
-  <div class="field">
-    <label>DB Tables</label>
-    <div class="list-items">
+  <fieldset class="field">
+    <legend>DB Tables</legend>
+    <div class="list-items" role="list" aria-label="Added database tables">
       @for (table of frontmatter().db_tables; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ table }}</code>
-          <button class="btn-icon" (click)="removeTable($index)">&times;</button>
+          <button class="btn-icon" (click)="removeTable($index)" [attr.aria-label]="'Remove table ' + table">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
     <div class="add-row">
+      <label class="sr-only" for="fm-new-table">Add table name</label>
       <input
+        id="fm-new-table"
         type="text"
         [(ngModel)]="newTable"
         placeholder="table_name"
         (keyup.enter)="addTable()"
+        autocomplete="off"
       />
       <button class="btn btn-sm" (click)="addTable()">Add</button>
     </div>
-  </div>
+  </fieldset>
 
-  <div class="field">
-    <label>Dependencies</label>
-    <div class="list-items">
+  <fieldset class="field">
+    <legend>Dependencies</legend>
+    <div class="list-items" role="list" aria-label="Added dependencies">
       @for (dep of frontmatter().depends_on; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ dep }}</code>
-          <button class="btn-icon" (click)="removeDependency($index)">&times;</button>
+          <button class="btn-icon" (click)="removeDependency($index)" [attr.aria-label]="'Remove dependency ' + dep">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
     <div class="add-row">
+      <label class="sr-only" for="fm-new-dep">Add dependency</label>
       <input
+        id="fm-new-dep"
         type="text"
         [(ngModel)]="newDep"
         placeholder="module-name"
         list="dep-suggestions"
         (keyup.enter)="addDependency()"
+        autocomplete="off"
       />
       <datalist id="dep-suggestions">
         @for (mod of availableModules(); track mod) {
@@ -103,5 +119,5 @@
       </datalist>
       <button class="btn btn-sm" (click)="addDependency()">Add</button>
     </div>
-  </div>
-</div>
+  </fieldset>
+</form>
