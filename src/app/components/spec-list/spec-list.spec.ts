@@ -130,10 +130,21 @@ describe('SpecListComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/edit', 5]);
   });
 
-  it('should delete spec with stopPropagation', async () => {
+  it('should delete spec with stopPropagation after confirm', async () => {
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
     const event = { stopPropagation: vi.fn() } as unknown as Event;
     await component.onDeleteSpec(event, 1);
     expect(event.stopPropagation).toHaveBeenCalled();
+    expect(globalThis.confirm).toHaveBeenCalledWith('Are you sure you want to delete "auth-service"?');
     expect(storeSpy.deleteSpec).toHaveBeenCalledWith(1);
+  });
+
+  it('should not delete spec when confirm is cancelled', async () => {
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const event = { stopPropagation: vi.fn() } as unknown as Event;
+    await component.onDeleteSpec(event, 1);
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(globalThis.confirm).toHaveBeenCalled();
+    expect(storeSpy.deleteSpec).not.toHaveBeenCalled();
   });
 });

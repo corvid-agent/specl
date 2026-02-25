@@ -33,6 +33,9 @@ export class SpecListComponent {
 
   async onDeleteSpec(event: Event, id: number): Promise<void> {
     event.stopPropagation();
+    const spec = this.store.allSpecs().find((s) => s.id === id);
+    const name = spec?.frontmatter.module || spec?.filename || 'this spec';
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     await this.store.deleteSpec(id);
   }
 

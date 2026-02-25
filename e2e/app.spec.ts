@@ -252,6 +252,7 @@ None.
 
     // Hover to show delete button and click it
     await page.locator('.spec-item').hover();
+    page.on('dialog', (dialog) => dialog.accept());
     await page.click('.delete-btn');
 
     // Spec should be removed
