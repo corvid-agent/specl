@@ -1,9 +1,9 @@
-<div class="welcome">
+<div class="welcome" role="region" aria-label="Welcome">
   <div class="welcome-content">
     <h1>Specl</h1>
     <p class="tagline">The all-in-one spec editor</p>
 
-    <div class="actions">
+    <div class="actions" role="group" aria-label="Get started">
       <button class="btn btn-primary btn-lg" (click)="onCreateSpec()">
         Create New Spec
       </button>
@@ -12,19 +12,19 @@
       </button>
     </div>
 
-    <div class="features">
-      <div class="feature">
+    <section class="features" aria-label="Features">
+      <article class="feature">
         <h3>Structured Editing</h3>
         <p>Edit frontmatter, sections, and tables through an intuitive UI — not just raw markdown.</p>
-      </div>
-      <div class="feature">
+      </article>
+      <article class="feature">
         <h3>Live Validation</h3>
         <p>Real-time validation against the spec format. See errors and warnings as you type.</p>
-      </div>
-      <div class="feature">
+      </article>
+      <article class="feature">
         <h3>Import &amp; Export</h3>
         <p>Import existing <code>.spec.md</code> files. Export back to valid markdown anytime.</p>
-      </div>
-    </div>
+      </article>
+    </section>
   </div>
 </div>

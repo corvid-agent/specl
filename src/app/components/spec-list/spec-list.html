@@ -1,28 +1,36 @@
-<div class="spec-list">
+<nav class="spec-list" aria-label="Specifications">
   <div class="actions">
     <button class="btn btn-primary" (click)="onCreateSpec()">+ New Spec</button>
     <button class="btn btn-secondary" (click)="onImport()">Import</button>
   </div>
 
-  <div class="suite-scroll-area">
+  <div class="suite-scroll-area" role="tree" aria-label="Spec suites">
     @for (entry of store.suites() | keyvalue:suiteOrder; track entry.key) {
-      <div class="suite-group">
+      <div class="suite-group" role="treeitem" [attr.aria-expanded]="!isSuiteCollapsed(entry.key)">
         <button
           class="suite-header"
           [class.collapsed]="isSuiteCollapsed(entry.key)"
           (click)="toggleSuite(entry.key)"
+          [attr.aria-expanded]="!isSuiteCollapsed(entry.key)"
+          [attr.aria-label]="entry.key + ' suite, ' + entry.value.length + ' specs'"
         >
-          <span class="suite-chevron">&#9656;</span>
+          <span class="suite-chevron" aria-hidden="true">&#9656;</span>
           <span class="suite-name">{{ entry.key }}</span>
-          <span class="suite-count">{{ entry.value.length }}</span>
+          <span class="suite-count" aria-hidden="true">{{ entry.value.length }}</span>
         </button>
         @if (!isSuiteCollapsed(entry.key)) {
-          <div class="suite-items">
+          <ul class="suite-items" role="group">
             @for (spec of entry.value; track spec.id) {
-              <div
+              <li
                 class="spec-item"
+                role="treeitem"
                 [class.active]="store.activeSpec()?.id === spec.id"
+                [attr.aria-selected]="store.activeSpec()?.id === spec.id"
+                [attr.aria-current]="store.activeSpec()?.id === spec.id ? 'page' : null"
+                tabindex="0"
                 (click)="onSelectSpec(spec.id!)"
+                (keydown.enter)="onSelectSpec(spec.id!)"
+                (keydown.space)="$event.preventDefault(); onSelectSpec(spec.id!)"
               >
                 <div class="spec-info">
                   <div class="spec-top-row">
@@ -30,27 +38,31 @@
                     <span class="spec-status" [attr.data-status]="spec.frontmatter.status">
                       {{ spec.frontmatter.status }}
                     </span>
-                    <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" title="Delete spec">
-                      &times;
+                    <button
+                      class="btn-icon delete-btn"
+                      (click)="onDeleteSpec($event, spec.id!)"
+                      [attr.aria-label]="'Delete ' + spec.filename"
+                    >
+                      <span aria-hidden="true">&times;</span>
                     </button>
                   </div>
                   <span class="spec-module">{{ spec.frontmatter.module || 'untitled' }}</span>
                   <span class="spec-preview">{{ getPreview(spec) }}</span>
                 </div>
-              </div>
+              </li>
             }
-          </div>
+          </ul>
         }
       </div>
     }
   </div>
 
   @if (store.allSpecs().length === 0) {
-    <div class="empty-state">
+    <div class="empty-state" role="status">
       <p>No specs yet.</p>
       <p>Create a new spec or import existing <code>.spec.md</code> files.</p>
     </div>
   }
 
   <app-github-connect (specsPulled)="onGitHubPull($event)" />
-</div>
+</nav>
