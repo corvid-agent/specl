@@ -89,7 +89,7 @@ describe('GitHubService', () => {
     });
 
     it('should check multiple candidate directories', async () => {
-      // Tree has 'spec' directory but not 'specs'
+      // Single tree response — "specs" dir missing, "spec" dir has files
       fetchSpy.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -109,6 +109,13 @@ describe('GitHubService', () => {
         ok: true,
         json: async () => ({ tree: [] }),
       });
+
+      const path = await service.scanRepoForSpecs('org', 'repo', 'main');
+      expect(path).toBeNull();
+    });
+
+    it('should return null when tree fetch fails', async () => {
+      fetchSpy.mockResolvedValueOnce({ ok: false });
 
       const path = await service.scanRepoForSpecs('org', 'repo', 'main');
       expect(path).toBeNull();
