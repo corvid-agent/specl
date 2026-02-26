@@ -1,18 +1,19 @@
-<nav class="section-nav">
-  <h3 class="nav-title">Sections</h3>
-  <ul class="nav-list">
+<nav class="section-nav" aria-label="Spec sections">
+  <h3 class="nav-title" id="section-nav-heading">Sections</h3>
+  <ul class="nav-list" role="listbox" aria-labelledby="section-nav-heading">
     @for (item of navItems(); track item.label) {
-      <li>
+      <li role="option" [attr.aria-selected]="isActive(item)">
         <button
           class="nav-item"
           [class.active]="isActive(item)"
           [class.level-2]="item.type === 'section' && item.level === 2"
           [class.level-3]="item.type === 'section' && item.level >= 3"
           [class.frontmatter]="item.type === 'frontmatter'"
+          [attr.aria-current]="isActive(item) ? 'true' : null"
           (click)="onSelect(item.type === 'frontmatter' ? -1 : item.index)"
         >
           @if (item.type === 'frontmatter') {
-            <span class="nav-icon">&#9881;</span>
+            <span class="nav-icon" aria-hidden="true">&#9881;</span>
           }
           <span class="nav-label">{{ item.label }}</span>
         </button>

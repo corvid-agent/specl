@@ -106,7 +106,10 @@ export class SpecStoreService {
   validateActiveSpec(): ValidationResult | null {
     const spec = this.activeSpec();
     if (!spec) return null;
-    return this.validator.validate(spec);
+    const knownModules = this.specs()
+      .map((s) => s.frontmatter.module)
+      .filter(Boolean);
+    return this.validator.validate(spec, knownModules);
   }
 
   private inferSuite(pathOrName: string): string {

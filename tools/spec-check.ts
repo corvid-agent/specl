@@ -6,6 +6,7 @@
  *   bun tools/spec-check.ts [paths...]
  *   bun tools/spec-check.ts specs/
  *   bun tools/spec-check.ts specs/models/spec-models.spec.md
+ *   bun tools/spec-check.ts --deps specs/       # show dependency graph
  *
  * Exit codes:
  *   0 — all specs valid
@@ -218,9 +219,136 @@ function walkDir(dir: string, files: string[]): void {
   }
 }
 
+// ─── Cross-spec dependency validation ────────────────────────────────
+interface ParsedSpec {
+  file: string;
+  frontmatter: SpecFrontmatter;
+  sections: SpecSection[];
+}
+
+function validateDependencyRefs(
+  specs: ParsedSpec[],
+): Map<string, ValidationError[]> {
+  const knownModules = new Set(specs.map((s) => s.frontmatter.module).filter(Boolean));
+  const errorsByFile = new Map<string, ValidationError[]>();
+
+  for (const spec of specs) {
+    const errors: ValidationError[] = [];
+    for (const dep of spec.frontmatter.depends_on) {
+      if (!knownModules.has(dep)) {
+        errors.push({
+          level: 'warning',
+          field: 'depends_on',
+          message: `Dependency "${dep}" does not match any known spec module`,
+        });
+      }
+    }
+    if (errors.length > 0) {
+      errorsByFile.set(spec.file, errors);
+    }
+  }
+
+  return errorsByFile;
+}
+
+function detectCycles(specs: ParsedSpec[]): string[][] {
+  const graph = new Map<string, string[]>();
+  for (const spec of specs) {
+    if (spec.frontmatter.module) {
+      graph.set(spec.frontmatter.module, spec.frontmatter.depends_on);
+    }
+  }
+
+  const cycles: string[][] = [];
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+
+  function dfs(node: string, path: string[]): void {
+    if (inStack.has(node)) {
+      const cycleStart = path.indexOf(node);
+      cycles.push([...path.slice(cycleStart), node]);
+      return;
+    }
+    if (visited.has(node)) return;
+
+    visited.add(node);
+    inStack.add(node);
+    path.push(node);
+
+    for (const dep of graph.get(node) ?? []) {
+      if (graph.has(dep)) {
+        dfs(dep, path);
+      }
+    }
+
+    path.pop();
+    inStack.delete(node);
+  }
+
+  for (const mod of graph.keys()) {
+    dfs(mod, []);
+  }
+
+  return cycles;
+}
+
+function printDependencyGraph(specs: ParsedSpec[]): void {
+  const specsByModule = new Map<string, ParsedSpec>();
+  for (const spec of specs) {
+    if (spec.frontmatter.module) {
+      specsByModule.set(spec.frontmatter.module, spec);
+    }
+  }
+
+  // Build reverse dependency map (consumed by)
+  const consumedBy = new Map<string, string[]>();
+  for (const spec of specs) {
+    for (const dep of spec.frontmatter.depends_on) {
+      const existing = consumedBy.get(dep) ?? [];
+      existing.push(spec.frontmatter.module);
+      consumedBy.set(dep, existing);
+    }
+  }
+
+  console.log('Dependency Graph\n');
+
+  // Sort by module name for consistent output
+  const sorted = [...specsByModule.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+  for (const [mod, spec] of sorted) {
+    const deps = spec.frontmatter.depends_on;
+    const dependents = consumedBy.get(mod) ?? [];
+    const relPath = relative(process.cwd(), spec.file);
+
+    console.log(`  ${mod}  (${relPath})`);
+    if (deps.length > 0) {
+      console.log(`    depends on: ${deps.join(', ')}`);
+    }
+    if (dependents.length > 0) {
+      console.log(`    used by:    ${dependents.join(', ')}`);
+    }
+    if (deps.length === 0 && dependents.length === 0) {
+      console.log('    (no dependencies)');
+    }
+    console.log('');
+  }
+
+  // Show cycles if any
+  const cycles = detectCycles(specs);
+  if (cycles.length > 0) {
+    console.log('Circular dependencies detected:\n');
+    for (const cycle of cycles) {
+      console.log(`  ${cycle.join(' -> ')}`);
+    }
+    console.log('');
+  }
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
-const paths = args.length > 0 ? args : ['specs/'];
+const showDeps = args.includes('--deps');
+const paths = args.filter((a) => a !== '--deps');
+if (paths.length === 0) paths.push('specs/');
 
 const specFiles = findSpecFiles(paths);
 
@@ -229,22 +357,41 @@ if (specFiles.length === 0) {
   process.exit(2);
 }
 
+// Parse all specs up front for cross-spec validation
+const parsedSpecs: ParsedSpec[] = specFiles.map((file) => {
+  const raw = readFileSync(file, 'utf-8');
+  const { frontmatter, body } = extractFrontmatter(raw);
+  const sections = parseSections(body);
+  return { file, frontmatter, sections };
+});
+
+// ─── --deps mode: print graph and exit ──────────────────────────────
+if (showDeps) {
+  printDependencyGraph(parsedSpecs);
+  process.exit(0);
+}
+
+// ─── Normal validation mode ─────────────────────────────────────────
+const depErrors = validateDependencyRefs(parsedSpecs);
+const cycles = detectCycles(parsedSpecs);
+
 let totalErrors = 0;
 let totalWarnings = 0;
 let failedFiles = 0;
 
 console.log(`Checking ${specFiles.length} spec file(s)...\n`);
 
-for (const file of specFiles) {
-  const raw = readFileSync(file, 'utf-8');
-  const { frontmatter, body } = extractFrontmatter(raw);
-  const sections = parseSections(body);
-  const errors = validate(frontmatter, sections);
+for (const spec of parsedSpecs) {
+  const errors = validate(spec.frontmatter, spec.sections);
+
+  // Merge in cross-spec dependency warnings
+  const crossErrors = depErrors.get(spec.file) ?? [];
+  errors.push(...crossErrors);
 
   const fileErrors = errors.filter((e) => e.level === 'error');
   const fileWarnings = errors.filter((e) => e.level === 'warning');
 
-  const relPath = relative(process.cwd(), file);
+  const relPath = relative(process.cwd(), spec.file);
 
   if (fileErrors.length === 0 && fileWarnings.length === 0) {
     console.log(`  PASS  ${relPath}`);
@@ -266,6 +413,15 @@ for (const file of specFiles) {
 
   totalErrors += fileErrors.length;
   totalWarnings += fileWarnings.length;
+}
+
+// Report cycles
+if (cycles.length > 0) {
+  console.log('\nCircular dependencies detected:');
+  for (const cycle of cycles) {
+    console.log(`  ${cycle.join(' -> ')}`);
+  }
+  totalWarnings += cycles.length;
 }
 
 console.log('');

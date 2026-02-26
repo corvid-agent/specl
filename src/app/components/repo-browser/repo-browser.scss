@@ -17,6 +17,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-secondary, var(--muted));
+  margin: 0;
 }
 
 .repo-scanning {
@@ -38,8 +39,9 @@
   width: 100%;
   box-sizing: border-box;
 
-  &:focus {
-    outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
     border-color: var(--accent);
   }
 

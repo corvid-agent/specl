@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { type SpecFrontmatter, type SpecStatus } from '../../models/spec.model';
 
@@ -12,6 +12,15 @@ import { type SpecFrontmatter, type SpecStatus } from '../../models/spec.model';
 export class FrontmatterEditorComponent {
   readonly frontmatter = input.required<SpecFrontmatter>();
   readonly frontmatterChange = output<SpecFrontmatter>();
+  /** All known module names across specs, for dependency autocomplete */
+  readonly knownModules = input<string[]>([]);
+
+  /** Modules available as suggestions — excludes the current module and already-added deps */
+  protected readonly availableModules = computed(() => {
+    const current = this.frontmatter().module;
+    const existing = new Set(this.frontmatter().depends_on);
+    return this.knownModules().filter((m) => m !== current && !existing.has(m));
+  });
 
   protected newFile = '';
   protected newTable = '';
