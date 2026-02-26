@@ -81,6 +81,12 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+
+  [role='tabpanel'] {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
 }
 
 .editor-sidebar {
@@ -185,6 +191,10 @@
 
   .editor-body {
     flex-direction: column;
+
+    [role='tabpanel'] {
+      flex-direction: column;
+    }
   }
 
   .editor-sidebar {

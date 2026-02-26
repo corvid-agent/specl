@@ -58,6 +58,7 @@ export class MarkdownEditorComponent implements OnDestroy {
             markdown(),
             syntaxHighlighting(defaultHighlightStyle),
             oneDark,
+            EditorView.contentAttributes.of({ 'aria-label': 'Markdown editor' }),
             EditorView.updateListener.of((update) => {
               if (update.docChanged) {
                 this.suppressUpdate = true;

@@ -37,12 +37,14 @@
   </div>
 
   <div class="field">
-    <label>Files</label>
-    <div class="list-items">
+    <label id="fm-files-label">Files</label>
+    <div class="list-items" role="list" aria-labelledby="fm-files-label">
       @for (file of frontmatter().files; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ file }}</code>
-          <button class="btn-icon" (click)="removeFile($index)">&times;</button>
+          <button class="btn-icon" (click)="removeFile($index)" [attr.aria-label]="'Remove file ' + file">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
@@ -51,6 +53,7 @@
         type="text"
         [(ngModel)]="newFile"
         placeholder="server/path/to/file.ts"
+        aria-label="New file path"
         (keyup.enter)="addFile()"
       />
       <button class="btn btn-sm" (click)="addFile()">Add</button>
@@ -58,12 +61,14 @@
   </div>
 
   <div class="field">
-    <label>DB Tables</label>
-    <div class="list-items">
+    <label id="fm-tables-label">DB Tables</label>
+    <div class="list-items" role="list" aria-labelledby="fm-tables-label">
       @for (table of frontmatter().db_tables; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ table }}</code>
-          <button class="btn-icon" (click)="removeTable($index)">&times;</button>
+          <button class="btn-icon" (click)="removeTable($index)" [attr.aria-label]="'Remove table ' + table">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
@@ -72,6 +77,7 @@
         type="text"
         [(ngModel)]="newTable"
         placeholder="table_name"
+        aria-label="New table name"
         (keyup.enter)="addTable()"
       />
       <button class="btn btn-sm" (click)="addTable()">Add</button>
@@ -79,12 +85,14 @@
   </div>
 
   <div class="field">
-    <label>Dependencies</label>
-    <div class="list-items">
+    <label id="fm-deps-label">Dependencies</label>
+    <div class="list-items" role="list" aria-labelledby="fm-deps-label">
       @for (dep of frontmatter().depends_on; track $index) {
-        <div class="list-item">
+        <div class="list-item" role="listitem">
           <code>{{ dep }}</code>
-          <button class="btn-icon" (click)="removeDependency($index)">&times;</button>
+          <button class="btn-icon" (click)="removeDependency($index)" [attr.aria-label]="'Remove dependency ' + dep">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
       }
     </div>
@@ -93,6 +101,7 @@
         type="text"
         [(ngModel)]="newDep"
         placeholder="specs/category/dep.spec.md"
+        aria-label="New dependency path"
         (keyup.enter)="addDependency()"
       />
       <button class="btn btn-sm" (click)="addDependency()">Add</button>

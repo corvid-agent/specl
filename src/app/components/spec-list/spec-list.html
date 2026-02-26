@@ -1,4 +1,4 @@
-<div class="spec-list">
+<div class="spec-list" role="complementary" aria-label="Spec browser">
   <div class="actions">
     <button class="btn btn-primary" (click)="onCreateSpec()">+ New Spec</button>
     <button class="btn btn-secondary" (click)="onImport()">Import</button>
@@ -6,22 +6,26 @@
 
   <div class="suite-scroll-area">
     @for (entry of store.suites() | keyvalue:suiteOrder; track entry.key) {
-      <div class="suite-group">
+      <div class="suite-group" role="group" [attr.aria-label]="entry.key + ' suite'">
         <button
           class="suite-header"
           [class.collapsed]="isSuiteCollapsed(entry.key)"
           (click)="toggleSuite(entry.key)"
+          [attr.aria-expanded]="!isSuiteCollapsed(entry.key)"
+          [attr.aria-controls]="'suite-items-' + entry.key"
         >
-          <span class="suite-chevron">&#9656;</span>
+          <span class="suite-chevron" aria-hidden="true">&#9656;</span>
           <span class="suite-name">{{ entry.key }}</span>
           <span class="suite-count">{{ entry.value.length }}</span>
         </button>
         @if (!isSuiteCollapsed(entry.key)) {
-          <div class="suite-items">
+          <ul class="suite-items" role="listbox" [id]="'suite-items-' + entry.key" [attr.aria-label]="entry.key + ' specs'">
             @for (spec of entry.value; track spec.id) {
-              <div
+              <li
                 class="spec-item"
+                role="option"
                 [class.active]="store.activeSpec()?.id === spec.id"
+                [attr.aria-selected]="store.activeSpec()?.id === spec.id"
                 (click)="onSelectSpec(spec.id!)"
               >
                 <div class="spec-info">
@@ -30,16 +34,16 @@
                     <span class="spec-status" [attr.data-status]="spec.frontmatter.status">
                       {{ spec.frontmatter.status }}
                     </span>
-                    <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" title="Delete spec">
-                      &times;
+                    <button class="btn-icon delete-btn" (click)="onDeleteSpec($event, spec.id!)" [attr.aria-label]="'Delete spec ' + spec.filename">
+                      <span aria-hidden="true">&times;</span>
                     </button>
                   </div>
                   <span class="spec-module">{{ spec.frontmatter.module || 'untitled' }}</span>
                   <span class="spec-preview">{{ getPreview(spec) }}</span>
                 </div>
-              </div>
+              </li>
             }
-          </div>
+          </ul>
         }
       </div>
     }

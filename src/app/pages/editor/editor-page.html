@@ -2,26 +2,35 @@
   <div class="editor-page">
     <header class="editor-toolbar">
       <button class="btn-icon back-to-nav-btn" (click)="onBackToNav()" aria-label="Back to sections">
-        &#8592;
+        <span aria-hidden="true">&#8592;</span>
       </button>
       <input
         class="filename-input"
         [value]="filename()"
         (change)="onFilenameChange($event)"
         placeholder="filename.spec.md"
+        aria-label="Spec filename"
       />
       <div class="toolbar-actions">
-        <div class="tab-group">
+        <div class="tab-group" role="tablist" aria-label="Editor view">
           <button
             class="tab"
+            role="tab"
+            id="tab-edit"
             [class.active]="activeTab() === 'edit'"
+            [attr.aria-selected]="activeTab() === 'edit'"
+            aria-controls="tabpanel-edit"
             (click)="setTab('edit')"
           >
             Edit
           </button>
           <button
             class="tab"
+            role="tab"
+            id="tab-preview"
             [class.active]="activeTab() === 'preview'"
+            [attr.aria-selected]="activeTab() === 'preview'"
+            aria-controls="tabpanel-preview"
             (click)="setTab('preview')"
           >
             Preview
@@ -49,47 +58,49 @@
 
     <div class="editor-body">
       @if (activeTab() === 'edit') {
-        <aside class="editor-sidebar" [class.mobile-open]="mobileNavOpen()">
-          <app-section-nav
-            [sections]="editableSections()"
-            [activeIndex]="activeSectionIndex()"
-            (selectIndex)="onNavigate($event)"
-          />
-        </aside>
-        <div class="editor-main" [class.mobile-hidden]="mobileNavOpen()">
-          @if (activeSectionIndex() === -1) {
-            <div class="section-panel">
-              <div class="section-panel-header">
-                <h2>Frontmatter</h2>
-                <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
-              </div>
-              <div class="section-panel-body">
-                <app-frontmatter-editor
-                  [frontmatter]="frontmatter()"
-                  (frontmatterChange)="onFrontmatterChange($event)"
-                />
-              </div>
-              <footer class="section-panel-footer">
-                @if (editableSections().length > 0) {
-                  <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
-                    Next: {{ editableSections()[0].heading }}
-                  </button>
-                }
-              </footer>
-            </div>
-          } @else if (activeEditableSection(); as sec) {
-            <app-section-editor
-              [section]="sec"
-              [sectionIndex]="activeSectionIndex()"
-              [totalSections]="editableSections().length"
-              (contentChange)="onSectionContentChange($event)"
-              (headingChange)="onSectionHeadingChange($event)"
-              (navigate)="onNavigate($event)"
+        <div id="tabpanel-edit" role="tabpanel" aria-labelledby="tab-edit">
+          <aside class="editor-sidebar" [class.mobile-open]="mobileNavOpen()">
+            <app-section-nav
+              [sections]="editableSections()"
+              [activeIndex]="activeSectionIndex()"
+              (selectIndex)="onNavigate($event)"
             />
-          }
+          </aside>
+          <div class="editor-main" [class.mobile-hidden]="mobileNavOpen()">
+            @if (activeSectionIndex() === -1) {
+              <div class="section-panel">
+                <div class="section-panel-header">
+                  <h2>Frontmatter</h2>
+                  <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
+                </div>
+                <div class="section-panel-body">
+                  <app-frontmatter-editor
+                    [frontmatter]="frontmatter()"
+                    (frontmatterChange)="onFrontmatterChange($event)"
+                  />
+                </div>
+                <footer class="section-panel-footer">
+                  @if (editableSections().length > 0) {
+                    <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
+                      Next: {{ editableSections()[0].heading }}
+                    </button>
+                  }
+                </footer>
+              </div>
+            } @else if (activeEditableSection(); as sec) {
+              <app-section-editor
+                [section]="sec"
+                [sectionIndex]="activeSectionIndex()"
+                [totalSections]="editableSections().length"
+                (contentChange)="onSectionContentChange($event)"
+                (headingChange)="onSectionHeadingChange($event)"
+                (navigate)="onNavigate($event)"
+              />
+            }
+          </div>
         </div>
       } @else {
-        <div class="preview-pane">
+        <div id="tabpanel-preview" role="tabpanel" aria-labelledby="tab-preview" class="preview-pane">
           <app-spec-preview
             [markdown]="body()"
             [validation]="validation()"
