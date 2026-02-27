@@ -53,6 +53,7 @@ export class MarkdownEditorComponent implements OnDestroy {
           extensions: [
             lineNumbers(),
             highlightActiveLine(),
+            EditorView.lineWrapping,
             history(),
             keymap.of([...defaultKeymap, ...historyKeymap]),
             markdown(),

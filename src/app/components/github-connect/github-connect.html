@@ -1,4 +1,4 @@
-<div class="github-section">
+<section class="github-section" aria-label="GitHub connection">
   @if (github.connected()) {
     <!-- Connected to a repo -->
     <div class="github-connected">
@@ -7,17 +7,22 @@
           <img
             class="avatar"
             [src]="oauth.avatarUrl()"
-            [alt]="oauth.username()"
+            [attr.alt]="'Avatar for ' + oauth.username()"
             width="20"
             height="20"
           />
         } @else {
-          <span class="status-dot connected"></span>
+          <span class="status-dot connected" aria-hidden="true"></span>
         }
-        <span class="connection-label">{{ github.config()?.owner }}/{{ github.config()?.repo }}</span>
+        <span class="connection-label" role="status">{{ github.config()?.owner }}/{{ github.config()?.repo }}</span>
       </div>
-      <div class="connected-actions">
-        <button class="btn btn-sm btn-primary" (click)="onPull()" [disabled]="github.loading()">
+      <div class="connected-actions" role="group" aria-label="Repository actions">
+        <button
+          class="btn btn-sm btn-primary"
+          (click)="onPull()"
+          [disabled]="github.loading()"
+          [attr.aria-busy]="github.loading()"
+        >
           @if (github.loading()) { Pulling... } @else { Pull Specs }
         </button>
         <button class="btn btn-sm" (click)="onDisconnect()">Disconnect</button>
@@ -28,11 +33,11 @@
     </div>
   } @else if (oauth.state() === 'awaiting_code' || oauth.state() === 'polling') {
     <!-- Device flow in progress -->
-    <div class="device-flow">
-      <p class="device-flow-label">Enter this code on GitHub:</p>
+    <div class="device-flow" role="region" aria-label="Device authorization">
+      <p class="device-flow-label" id="device-code-label">Enter this code on GitHub:</p>
       <div class="device-code-row">
-        <code class="device-code">{{ oauth.userCode() }}</code>
-        <button class="btn btn-sm" (click)="copyCode()">Copy</button>
+        <code class="device-code" aria-labelledby="device-code-label">{{ oauth.userCode() }}</code>
+        <button class="btn btn-sm" (click)="copyCode()" aria-label="Copy device code">Copy</button>
       </div>
       <p class="device-flow-hint">
         @if (oauth.verificationUri()) {
@@ -41,7 +46,7 @@
           </a>
         }
         @if (oauth.state() === 'polling') {
-          <span class="polling-status">Waiting for authorization...</span>
+          <span class="polling-status" role="status" aria-live="polite">Waiting for authorization...</span>
         }
       </p>
       <button class="btn btn-sm" (click)="onCancelFlow()">Cancel</button>
@@ -53,7 +58,7 @@
         <img
           class="avatar"
           [src]="oauth.avatarUrl()"
-          [alt]="oauth.username()"
+          [attr.alt]="'Avatar for ' + oauth.username()"
           width="20"
           height="20"
         />
@@ -64,7 +69,7 @@
 
     @if (showManualForm()) {
       <!-- Manual connect form (fallback) -->
-      <div class="github-form">
+      <form class="github-form" (submit)="$event.preventDefault()" aria-label="Connect to repository">
         <div class="form-row">
           <label class="form-field">
             <span class="form-label">Owner</span>
@@ -74,6 +79,7 @@
               placeholder="org or user"
               [value]="owner()"
               (input)="updateField('owner', $event)"
+              autocomplete="off"
             />
           </label>
           <label class="form-field">
@@ -84,6 +90,7 @@
               placeholder="repo-name"
               [value]="repo()"
               (input)="updateField('repo', $event)"
+              autocomplete="off"
             />
           </label>
         </div>
@@ -96,6 +103,7 @@
               placeholder="main"
               [value]="branch()"
               (input)="updateField('branch', $event)"
+              autocomplete="off"
             />
           </label>
           <label class="form-field">
@@ -106,20 +114,22 @@
               placeholder="specs"
               [value]="specsPath()"
               (input)="updateField('specsPath', $event)"
+              autocomplete="off"
             />
           </label>
         </div>
         @if (github.error()) {
-          <div class="form-error">{{ github.error() }}</div>
+          <div class="form-error" role="alert" aria-live="assertive">{{ github.error() }}</div>
         }
         <button
           class="btn btn-primary btn-sm"
           (click)="onConnect()"
           [disabled]="github.loading() || !owner() || !repo()"
+          [attr.aria-busy]="github.loading()"
         >
           @if (github.loading()) { Connecting... } @else { Connect }
         </button>
-      </div>
+      </form>
     } @else {
       <!-- Repo browser (default after OAuth) -->
       <app-repo-browser
@@ -131,7 +141,7 @@
     <!-- Not signed in, not connected -->
     @if (oauthAvailable) {
       <button class="btn btn-sm btn-github" (click)="onSignIn()">
-        <svg class="github-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+        <svg class="github-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
             0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
             -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
@@ -146,15 +156,19 @@
     }
 
     @if (oauth.state() === 'error') {
-      <div class="form-error">{{ oauth.error() }}</div>
+      <div class="form-error" role="alert" aria-live="assertive">{{ oauth.error() }}</div>
     }
 
-    <button class="btn btn-sm github-toggle" (click)="togglePat()">
+    <button
+      class="btn btn-sm github-toggle"
+      (click)="togglePat()"
+      [attr.aria-expanded]="showForm()"
+    >
       @if (showForm()) { Cancel } @else { Use Personal Access Token }
     </button>
 
     @if (showForm()) {
-      <div class="github-form">
+      <form class="github-form" (submit)="$event.preventDefault()" aria-label="Connect with Personal Access Token">
         <label class="form-field">
           <span class="form-label">Token</span>
           <input
@@ -163,6 +177,7 @@
             placeholder="ghp_..."
             [value]="token()"
             (input)="updateField('token', $event)"
+            autocomplete="off"
           />
         </label>
         <div class="form-row">
@@ -174,6 +189,7 @@
               placeholder="org or user"
               [value]="owner()"
               (input)="updateField('owner', $event)"
+              autocomplete="off"
             />
           </label>
           <label class="form-field">
@@ -184,6 +200,7 @@
               placeholder="repo-name"
               [value]="repo()"
               (input)="updateField('repo', $event)"
+              autocomplete="off"
             />
           </label>
         </div>
@@ -196,6 +213,7 @@
               placeholder="main"
               [value]="branch()"
               (input)="updateField('branch', $event)"
+              autocomplete="off"
             />
           </label>
           <label class="form-field">
@@ -206,20 +224,22 @@
               placeholder="specs"
               [value]="specsPath()"
               (input)="updateField('specsPath', $event)"
+              autocomplete="off"
             />
           </label>
         </div>
         @if (github.error()) {
-          <div class="form-error">{{ github.error() }}</div>
+          <div class="form-error" role="alert" aria-live="assertive">{{ github.error() }}</div>
         }
         <button
           class="btn btn-primary btn-sm"
           (click)="onConnect()"
           [disabled]="github.loading() || !token() || !owner() || !repo()"
+          [attr.aria-busy]="github.loading()"
         >
           @if (github.loading()) { Connecting... } @else { Connect }
         </button>
-      </div>
+      </form>
     }
   }
-</div>
+</section>

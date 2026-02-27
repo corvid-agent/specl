@@ -1,25 +1,27 @@
-<div class="section-editor">
+<section class="section-editor" [attr.aria-label]="'Editing section: ' + headingValue()">
   <header class="section-header">
     <div class="section-heading-row">
-      <span class="heading-prefix">##</span>
+      <span class="heading-prefix" aria-hidden="true">##</span>
+      <label class="sr-only" for="section-heading-input">Section heading</label>
       <input
+        id="section-heading-input"
         class="heading-input"
         [ngModel]="headingValue()"
         (ngModelChange)="onHeadingChange($event)"
         placeholder="Section heading"
       />
     </div>
-    <div class="section-nav-buttons">
+    <nav class="section-nav-buttons" aria-label="Section navigation">
       @if (hasPrev) {
-        <button class="btn btn-sm" (click)="goPrev()">Prev</button>
+        <button class="btn btn-sm" (click)="goPrev()" aria-label="Previous section">&#8592; Prev</button>
       }
       @if (hasNext) {
-        <button class="btn btn-sm" (click)="goNext()">Next</button>
+        <button class="btn btn-sm" (click)="goNext()" aria-label="Next section">Next &#8594;</button>
       }
-    </div>
+    </nav>
   </header>
 
-  <div class="section-body">
+  <div class="section-body" role="region" aria-label="Markdown editor">
     @if (hasTable()) {
       <!-- Structured editing mode: forms for tables, textareas for text -->
       <div class="structured-content">
@@ -45,4 +47,4 @@
       <div #sectionEditorHost class="editor-host"></div>
     }
   </div>
-</div>
+</section>

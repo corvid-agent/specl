@@ -114,3 +114,4 @@ Provides a focused editing interface for a single spec section. Renders an edita
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-02-24 | CorvidAgent | Initial spec |
+| 2026-02-24 | CorvidAgent | Add arrow icons to Prev/Next buttons (#17) |

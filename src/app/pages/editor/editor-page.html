@@ -4,7 +4,9 @@
       <button class="btn-icon back-to-nav-btn" (click)="onBackToNav()" aria-label="Back to sections">
         <span aria-hidden="true">&#8592;</span>
       </button>
+      <label class="sr-only" for="filename-input">Filename</label>
       <input
+        id="filename-input"
         class="filename-input"
         [value]="filename()"
         (change)="onFilenameChange($event)"
@@ -12,27 +14,35 @@
         aria-label="Spec filename"
       />
       <div class="toolbar-actions">
-        <div class="tab-group" role="tablist" aria-label="Editor view">
+        <div class="tab-group" role="tablist" aria-label="Editor views">
           <button
             class="tab"
             role="tab"
-            id="tab-edit"
             [class.active]="activeTab() === 'edit'"
             [attr.aria-selected]="activeTab() === 'edit'"
+            [attr.tabindex]="activeTab() === 'edit' ? 0 : -1"
+            id="tab-edit"
             aria-controls="tabpanel-edit"
             (click)="setTab('edit')"
           >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L3.463 11.1l-.47 1.64 1.64-.47 8.61-8.61a.25.25 0 0 0 0-.354Z"/>
+            </svg>
             Edit
           </button>
           <button
             class="tab"
             role="tab"
-            id="tab-preview"
             [class.active]="activeTab() === 'preview'"
             [attr.aria-selected]="activeTab() === 'preview'"
+            [attr.tabindex]="activeTab() === 'preview' ? 0 : -1"
+            id="tab-preview"
             aria-controls="tabpanel-preview"
             (click)="setTab('preview')"
           >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.671 13.008 9.981 14 8 14s-3.671-.992-4.933-2.078C1.797 10.831.88 9.577.43 8.899a1.62 1.62 0 0 1 0-1.798c.45-.678 1.367-1.932 2.637-3.023C4.329 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5s2.825-.742 3.955-1.715c1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5s-2.825.742-3.955 1.715c-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"/>
+            </svg>
             Preview
           </button>
         </div>
@@ -43,6 +53,7 @@
             class="btn btn-sm btn-primary"
             (click)="onCreatePR()"
             [disabled]="prLoading()"
+            [attr.aria-busy]="prLoading()"
           >
             @if (prLoading()) { Creating PR... } @else { Create PR }
           </button>
@@ -51,56 +62,74 @@
     </header>
 
     @if (prUrl()) {
-      <div class="pr-banner">
+      <div class="pr-banner" role="status" aria-live="polite">
         PR created: <a [href]="prUrl()" target="_blank" rel="noopener">{{ prUrl() }}</a>
       </div>
     }
 
     <div class="editor-body">
       @if (activeTab() === 'edit') {
-        <div id="tabpanel-edit" role="tabpanel" aria-labelledby="tab-edit">
-          <aside class="editor-sidebar" [class.mobile-open]="mobileNavOpen()">
-            <app-section-nav
-              [sections]="editableSections()"
-              [activeIndex]="activeSectionIndex()"
-              (selectIndex)="onNavigate($event)"
-            />
-          </aside>
-          <div class="editor-main" [class.mobile-hidden]="mobileNavOpen()">
-            @if (activeSectionIndex() === -1) {
-              <div class="section-panel">
-                <div class="section-panel-header">
+        <aside
+          class="editor-sidebar"
+          [class.mobile-open]="mobileNavOpen()"
+          id="tabpanel-edit"
+          role="tabpanel"
+          aria-labelledby="tab-edit"
+          aria-label="Section navigation"
+        >
+          <app-section-nav
+            [sections]="editableSections()"
+            [activeIndex]="activeSectionIndex()"
+            (selectIndex)="onNavigate($event)"
+          />
+        </aside>
+        <div class="editor-main" [class.mobile-hidden]="mobileNavOpen()">
+          @if (activeSectionIndex() === -1) {
+            <section class="section-panel" aria-label="Frontmatter editor">
+              <div class="section-panel-header">
+                <div class="section-panel-header-text">
                   <h2>Frontmatter</h2>
                   <p class="section-hint">Module metadata, files, dependencies, and configuration.</p>
                 </div>
-                <div class="section-panel-body">
-                  <app-frontmatter-editor
-                    [frontmatter]="frontmatter()"
-                    (frontmatterChange)="onFrontmatterChange($event)"
-                  />
-                </div>
-                <footer class="section-panel-footer">
-                  @if (editableSections().length > 0) {
-                    <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
-                      Next: {{ editableSections()[0].heading }}
-                    </button>
-                  }
-                </footer>
+                @if (editableSections().length > 0) {
+                  <div class="section-nav-buttons">
+                    <button class="btn btn-sm" (click)="onNavigate(0)">Next &#8594;</button>
+                  </div>
+                }
               </div>
-            } @else if (activeEditableSection(); as sec) {
-              <app-section-editor
-                [section]="sec"
-                [sectionIndex]="activeSectionIndex()"
-                [totalSections]="editableSections().length"
-                (contentChange)="onSectionContentChange($event)"
-                (headingChange)="onSectionHeadingChange($event)"
-                (navigate)="onNavigate($event)"
-              />
-            }
-          </div>
+              <div class="section-panel-body">
+                <app-frontmatter-editor
+                  [frontmatter]="frontmatter()"
+                  [knownModules]="knownModules()"
+                  (frontmatterChange)="onFrontmatterChange($event)"
+                />
+              </div>
+              <footer class="section-panel-footer">
+                @if (editableSections().length > 0) {
+                  <button class="btn btn-primary btn-sm" (click)="onNavigate(0)">
+                    Next: {{ editableSections()[0].heading }}
+                  </button>
+                }
+              </footer>
+            </section>
+          } @else if (activeEditableSection(); as sec) {
+            <app-section-editor
+              [section]="sec"
+              [sectionIndex]="activeSectionIndex()"
+              [totalSections]="editableSections().length"
+              (contentChange)="onSectionContentChange($event)"
+              (headingChange)="onSectionHeadingChange($event)"
+              (navigate)="onNavigate($event)"
+            />
+          }
         </div>
       } @else {
-        <div id="tabpanel-preview" role="tabpanel" aria-labelledby="tab-preview" class="preview-pane">
+        <div
+          class="preview-pane"
+          id="tabpanel-preview"
+          role="tabpanel"
+          aria-labelledby="tab-preview"
+        >
           <app-spec-preview
             [markdown]="body()"
             [validation]="validation()"
@@ -110,7 +139,7 @@
     </div>
   </div>
 } @else {
-  <div class="no-spec">
+  <div class="no-spec" role="status">
     <p>Select a spec from the sidebar or create a new one.</p>
   </div>
 }

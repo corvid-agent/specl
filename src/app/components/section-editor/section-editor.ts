@@ -113,6 +113,7 @@ export class SectionEditorComponent implements OnDestroy {
           extensions: [
             lineNumbers(),
             highlightActiveLine(),
+            EditorView.lineWrapping,
             history(),
             keymap.of([...defaultKeymap, ...historyKeymap]),
             markdown(),

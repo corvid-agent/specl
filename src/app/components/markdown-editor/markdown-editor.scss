@@ -7,4 +7,8 @@
 .editor-host {
   flex: 1;
   overflow: hidden;
+
+  :host ::ng-deep .cm-editor {
+    height: 100%;
+  }
 }

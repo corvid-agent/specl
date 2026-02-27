@@ -105,6 +105,16 @@ describe('GitHubService', () => {
     });
 
     it('should return null when no spec dirs found', async () => {
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ tree: [] }),
+      });
+
+      const path = await service.scanRepoForSpecs('org', 'repo', 'main');
+      expect(path).toBeNull();
+    });
+
+    it('should return null when tree fetch fails', async () => {
       fetchSpy.mockResolvedValueOnce({ ok: false });
 
       const path = await service.scanRepoForSpecs('org', 'repo', 'main');

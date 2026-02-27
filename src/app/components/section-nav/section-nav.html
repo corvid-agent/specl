@@ -1,8 +1,8 @@
 <nav class="section-nav" aria-label="Spec sections">
-  <h3 class="nav-title" id="section-nav-title">Sections</h3>
-  <ul class="nav-list" role="tree" aria-labelledby="section-nav-title">
+  <h3 class="nav-title" id="section-nav-heading">Sections</h3>
+  <ul class="nav-list" role="listbox" aria-labelledby="section-nav-heading">
     @for (item of navItems(); track item.label) {
-      <li role="treeitem" [attr.aria-selected]="isActive(item)">
+      <li role="option" [attr.aria-selected]="isActive(item)">
         <button
           class="nav-item"
           [class.active]="isActive(item)"

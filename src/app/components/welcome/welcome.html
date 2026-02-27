@@ -1,30 +1,31 @@
-<div class="welcome">
+<div class="welcome" role="region" aria-label="Welcome">
   <div class="welcome-content">
     <h1>Specl</h1>
     <p class="tagline">The all-in-one spec editor</p>
 
-    <div class="actions">
+    <div class="actions" role="group" aria-label="Get started">
       <button class="btn btn-primary btn-lg" (click)="onCreateSpec()">
         Create New Spec
       </button>
       <button class="btn btn-secondary btn-lg" (click)="onImport()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Import .spec.md Files
       </button>
     </div>
 
-    <div class="features">
-      <div class="feature">
+    <section class="features" aria-label="Features">
+      <article class="feature">
         <h3>Structured Editing</h3>
         <p>Edit frontmatter, sections, and tables through an intuitive UI — not just raw markdown.</p>
-      </div>
-      <div class="feature">
+      </article>
+      <article class="feature">
         <h3>Live Validation</h3>
         <p>Real-time validation against the spec format. See errors and warnings as you type.</p>
-      </div>
-      <div class="feature">
+      </article>
+      <article class="feature">
         <h3>Import &amp; Export</h3>
         <p>Import existing <code>.spec.md</code> files. Export back to valid markdown anytime.</p>
-      </div>
-    </div>
+      </article>
+    </section>
   </div>
 </div>
