@@ -65,7 +65,14 @@ tbody {
     border-color: var(--border);
   }
 
-  &:focus {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  &:focus:not(:focus-visible) {
     outline: none;
     border-color: var(--accent);
     background: var(--surface);
