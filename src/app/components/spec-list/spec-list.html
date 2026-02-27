@@ -15,6 +15,7 @@
           [class.collapsed]="isSuiteCollapsed(entry.key)"
           (click)="toggleSuite(entry.key)"
           [attr.aria-expanded]="!isSuiteCollapsed(entry.key)"
+          [attr.aria-controls]="'suite-items-' + entry.key"
           [attr.aria-label]="entry.key + ' suite, ' + entry.value.length + ' specs'"
         >
           <span class="suite-chevron" aria-hidden="true">&#9656;</span>
@@ -22,7 +23,7 @@
           <span class="suite-count" aria-hidden="true">{{ entry.value.length }}</span>
         </button>
         @if (!isSuiteCollapsed(entry.key)) {
-          <ul class="suite-items" role="group">
+          <ul class="suite-items" role="group" [id]="'suite-items-' + entry.key">
             @for (spec of entry.value; track spec.id) {
               <li
                 class="spec-item"
