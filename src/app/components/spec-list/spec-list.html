@@ -9,7 +9,7 @@
 
   <div class="suite-scroll-area" role="tree" aria-label="Spec suites">
     @for (entry of store.suites() | keyvalue:suiteOrder; track entry.key) {
-      <div class="suite-group" role="treeitem" [attr.aria-expanded]="!isSuiteCollapsed(entry.key)">
+      <div class="suite-group" role="treeitem" [attr.aria-expanded]="!isSuiteCollapsed(entry.key)" tabindex="0">
         <button
           class="suite-header"
           [class.collapsed]="isSuiteCollapsed(entry.key)"

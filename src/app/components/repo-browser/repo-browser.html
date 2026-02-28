@@ -1,7 +1,7 @@
 <div class="repo-browser" role="region" aria-label="Repository browser">
   <div class="repo-browser-header">
     <h4 class="repo-browser-title" id="repo-browser-heading">Your Repositories</h4>
-    <button class="btn btn-sm" (click)="onManual()">Manual</button>
+    <button class="btn btn-sm" (click)="onManual()" aria-label="Enter repository details manually">Manual</button>
   </div>
 
   @if (initResult(); as result) {
@@ -41,14 +41,16 @@
 
       <div class="repo-list" role="list" aria-labelledby="repo-browser-heading">
         @for (repo of filteredRepos(); track repo.full_name) {
-          <button
+          <div
             class="repo-item"
             role="listitem"
             [class.has-specs]="repo.hasSpecs"
-            [disabled]="connecting() !== null || initializing() !== null"
             [attr.aria-busy]="connecting() === repo.full_name || initializing() === repo.full_name"
             [attr.aria-label]="repo.full_name + (repo.hasSpecs ? ' (specs found)' : '') + (repo.private ? ' (private)' : '')"
             (click)="onSelectRepo(repo)"
+            tabindex="0"
+            (keydown.enter)="onSelectRepo(repo)"
+            (keydown.space)="$event.preventDefault(); onSelectRepo(repo)"
           >
             <div class="repo-item-main">
               <div class="repo-item-name">
@@ -81,7 +83,7 @@
                 </button>
               }
             </div>
-          </button>
+          </div>
         }
       </div>
 
