@@ -170,7 +170,8 @@
   transition: opacity 0.15s;
   flex-shrink: 0;
 
-  .spec-item:hover & {
+  .spec-item:hover &,
+  &:focus-visible {
     opacity: 0.6;
   }
 
