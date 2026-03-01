@@ -38,6 +38,7 @@
               (ngModelChange)="onTextBlockChange(blockIdx, $event)"
               placeholder="Enter text..."
               rows="3"
+              [attr.aria-label]="'Text block ' + (blockIdx + 1)"
             ></textarea>
           }
         }

@@ -78,12 +78,12 @@
   font-size: 13px;
   transition: background 0.1s, border-color 0.1s;
 
-  &:hover:not(:disabled) {
+  &:hover:not([aria-busy="true"]) {
     background: var(--hover);
     border-color: var(--accent, #58a6ff);
   }
 
-  &:disabled {
+  &[aria-busy="true"] {
     opacity: 0.6;
     cursor: default;
   }
@@ -92,7 +92,7 @@
     border-color: var(--status-active, #3fb950);
     background: rgba(63, 185, 80, 0.05);
 
-    &:hover:not(:disabled) {
+    &:hover:not([aria-busy="true"]) {
       background: rgba(63, 185, 80, 0.1);
     }
   }
