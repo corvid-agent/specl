@@ -16,6 +16,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/editor/editor-page').then((m) => m.EditorPageComponent),
       },
+      {
+        path: '**',
+        redirectTo: '',
+      },
     ],
   },
 ];
